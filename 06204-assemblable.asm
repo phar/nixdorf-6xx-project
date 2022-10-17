@@ -117,6 +117,7 @@ label_0089:
 	IN	0x50
 
 
+
 idle_loop:					; this was observed to be the idle loop
 	LXI	H,0x0028			; init HL
 
@@ -147,10 +148,10 @@ label_00A6:
 	RAR
 	JC	label_00CA
 	
-	IN	0x70
-	ANI	0x10
-	CNZ	sub_024D	;test port 0x70 bit is set
-	CZ	sub_00E1	;if not set
+	IN	0x70						;
+	ANI	0x10						; test port 0x70 bit 0x10
+	CNZ	sub_024D					; bit is set
+	CZ	terminal_emu_handler_00E1	;if not set
 	
 label_00CA:
 	IN	0x48
@@ -171,7 +172,7 @@ label_00CA:
 ;**************************************************************************************************
 
 
-sub_00E1:
+terminal_emu_handler_00E1: terminal_emu_handler_00E1(var_FF07)
 	PUSH	PSW
 	PUSH	B
 	PUSH	D
@@ -179,81 +180,107 @@ sub_00E1:
 	LHLD	var_FF07			;load HL from ram
 	MOV	A,M
 	CPI	0x0D
-	JZ	label_0145
+	JZ	handle_CR_0145
 	CPI	0x0A
-	JZ	label_0172
+	JZ	handle_LF_0172
 	CPI	0x0B
-	JZ	label_01A5
+	JZ	handle_VT_01A5
 	CPI	0x20
-	JZ	label_01DD
-	CALL	sub_021E
+	JZ	handle_SP_01DD
+	CALL	test_printer_ready_021E
+	
 	IN	0x70
 	ANI	0x08
-	JZ	return_from_int_subroutine
+	JZ	return_from_int_subroutine		;return
+	
 	MOV	A,M
 	CPI	0xB8
 	CZ	load_A_reg_with_20_and_ret
+	
 	CPI	0xB6
 	JZ	label_022E
 
-label_0112:
+label_0112: 		;label_0112(A_reg, HL_reg)
 	OUT	0x58
+	
 	MVI	A,0x80
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
+	
 	INX	H
 	SHLD	var_FF07
+	
 label_011F:
-	CALL	sub_021E
+	CALL	test_printer_ready_021E
 	IN	0x48
 	IN	0x70
 	ANI	0x04
 	JZ	label_011F
+	
 	LDA	var_FF0B
 	MOV	E,A
 	MVI	D,0x00
 	LHLD	var_FF0F			;load HL from ram
 	DAD	D
-	SHLD	var_FF0F
+	SHLD	var_FF0F			; var_FF0F = var_FF0F + var_FF0B;
+	
 	MOV	A,E
 	OUT	0x58
+	
 	MVI	A,0x40
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
-	JMP	return_from_int_subroutine
+	
+	JMP	return_from_int_subroutine			;return
 
-label_0145:
-	CALL	sub_021E
+
+;**************************************************************************************************
+
+
+
+handle_CR_0145:
+	CALL	test_printer_ready_021E
 	IN	0x70
 	ANI	0x04
-	JZ	return_from_int_subroutine
-	LHLD	var_FF07			;load HL from ram
-	INX	H
-	SHLD	var_FF07
+	JZ	return_from_int_subroutine			;return
+	
+	LHLD	var_FF07			;
+	INX	H						;
+	SHLD	var_FF07			; increment var_FF07
+	
 	LHLD	var_FF0F			;load HL from ram
 	MOV	A,L
 	OUT	0x58
+	
 	MOV	A,H
 	ORI	0x04
 	OUT	0x60
+	
 	ORI	0x40
 	OUT	0x60
+	
 	ANI	0xBF
 	OUT	0x60
 
 label_0169:
 	LXI	H,0x0000
 	SHLD	var_FF0F
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine				;return
+	
 
-label_0172:
-	CALL	sub_021E
+;**************************************************************************************************
+
+
+handle_LF_0172:
+	CALL	test_printer_ready_021E
 	IN	0x70
 	ANI	0x02
 	IN	0x48
-	JZ	label_0172
+	JZ	handle_LF_0172
 	LDA	var_FF0A
 	MOV	D,A
 	LDA	var_FF11
@@ -265,8 +292,10 @@ label_018B:
 	STA	var_FF11
 	MVI	A,0x08
 	OUT	0x58
+	
 	MVI	A,0x20
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
 
@@ -276,12 +305,16 @@ label_0199:
 	STA	var_FF09
 	JMP	label_0500
 
-label_01A5:
-	CALL	sub_021E
+;**************************************************************************************************
+
+handle_VT_01A5:
+	CALL	test_printer_ready_021E
+
 	IN	0x70
 	ANI	0x02
 	IN	0x48
-	JZ	label_01A5
+	JZ	handle_VT_01A5
+
 	LDA	var_FF11
 	MOV	D,A
 	LDA	var_FF0A
@@ -296,23 +329,30 @@ label_01A5:
 	MOV	A,H
 	ANI	0x03
 	OUT	0x60
+	
 	ORI	0x20
 	OUT	0x60
+	
 	ANI	0xDF
 	OUT	0x60
+	
 	LHLD	var_FF07			;load HL from ram
 	INX	H
 	SHLD	var_FF07			;store incremented var
+	
 	XRA	A
 	STA	var_FF11
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine			;return
 
-label_01DD:
-	CALL	sub_021E
+;**************************************************************************************************
+
+
+handle_SP_01DD:
+	CALL	test_printer_ready_021E
 	IN	0x48
 	IN	0x70
 	ANI	0x04
-	JZ	label_01DD
+	JZ	handle_SP_01DD
 	LDA	var_FF0B
 	MOV	C,A
 	MVI	B,0x00
@@ -328,7 +368,7 @@ label_01F3:
 	XCHG
 	SHLD	var_FF07
 	CPI	0x0D
-	JZ	return_from_int_subroutine
+	JZ	return_from_int_subroutine					;return
 	IN	0x48
 	MOV	A,E
 	OUT	0x58
@@ -341,15 +381,19 @@ label_01F3:
 	LHLD	var_FF0F			;load HL from ram
 	DAD	D
 	SHLD	var_FF0F
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine					;return
 
-sub_021E:
+;**************************************************************************************************
+
+test_printer_ready_021E:
 	IN	0x70
 	RAR
 	JC	label_022A
 	ANI	0x10
 	JZ	label_022A
 	RET
+
+;**************************************************************************************************
 
 label_022A:
 	POP	PSW
@@ -358,16 +402,21 @@ label_022A:
 label_022E:
 	MVI	A,0x3D
 	OUT	0x58
+	
 	MVI	A,0x80
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
+	
 label_0239:
-	CALL	sub_021E
-	IN	0x48
+	CALL	test_printer_ready_021E
+	IN	0x48							;results are discarded
+	
 	IN	0x70
 	ANI	0x08
 	JZ	label_0239
+	
 	MVI	A,0x2F
 	JMP	label_0112
 
@@ -382,38 +431,51 @@ sub_024D:
 	PUSH	H
 	MVI	A,0x00
 	OUT	0x60
-	CALL	sub_028E
+	CALL	test_port_70_and_ret
 	ANI	0x08
-	JZ	return_from_int_subroutine
-	LHLD	var_FF07			;load HL from ram
+	JZ	return_from_int_subroutine		;return
+
+	LHLD	var_FF07					;switch(var_FF07)P{
 	MOV	A,M
 	CPI	0x0A
-	JZ	label_02A0
+	JZ	label_02A0						;case 0x0a: label_02A0()
+	
 	CPI	0xB8
-	CZ	load_A_reg_with_20_and_ret
+	CZ	load_A_reg_with_20_and_ret		;case 0x0a: load_A_reg_with_20_and_ret()
+	
 	CPI	0xB6
-	CZ	load_A_reg_with_20_and_ret
+	CZ	load_A_reg_with_20_and_ret		;case 0xB6: load_A_reg_with_20_and_ret
+	
 	CPI	0x0B
-	JNZ	label_027D
-	JMP	label_027B
+	JNZ	label_027D						;case 0x0b: label_027D
+	JMP	label_027B						;default: label_027B
+
+
 
 call_sub_028E_2:
-	CALL	sub_028E
-
+	CALL	test_port_70_and_ret
 label_027B:
 	MVI	A,0x0C
 label_027D:
 	CMA
 	OUT	0x58
+	
 	MVI	A,0x80
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
+	
 	INX	H
 	SHLD	var_FF07
-	JMP	return_from_int_subroutine
+	
+	JMP	return_from_int_subroutine					;return
 
-sub_028E:
+;**************************************************************************************************
+
+
+
+test_port_70_and_ret:
 	IN	0x70      									;printer
 	RAR
 	JC	pop_b_and_jmp_err_printer_not_ready   		;does not return from this call
@@ -421,21 +483,26 @@ sub_028E:
 	JNC	pop_b_and_jmp_err_printer_not_ready			;does not return from this call
 	RET
 
+
+;**************************************************************************************************
+
 pop_b_and_jmp_err_printer_not_ready:
 	POP	B
 	JMP	err_printer_not_ready						;does not return from this call
 
-call_sub_028E:
-	CALL	sub_028E
-
+call_test_port_70_and_ret:										;A_reg - call_test_port_70_and_ret()
+	CALL	test_port_70_and_ret
 label_02A0:
 	MVI	A,0xF5
 	OUT	0x58
+	
 	MVI	A,0x80
 	OUT	0x60
+	
 	XRA	A
 	OUT	0x60
 	XRA	A
+	
 	JMP	label_0199
 
 label_02AF:
@@ -507,7 +574,7 @@ label_0317:
 	IN	0x70      ;printer
 	ANI	0x10
 	CNZ	sub_024D
-	CZ	sub_00E1
+	CZ	terminal_emu_handler_00E1
 	JMP	label_0317
 
 label_0332:
@@ -528,8 +595,11 @@ label_0345:
 	SHLD	var_FF07
 	DCR	C
 	JNZ	label_02CC
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine				;return
 	RST	7
+
+;**************************************************************************************************
+
 
 err_printer_not_ready:
 	LXI	B,var_printer_not_ready_string		;"printer not ready""
@@ -537,7 +607,10 @@ err_printer_not_ready:
 	MVI	A,0x01
 	OUT	0x50
 	STA	var_FF0E
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine				;return
+
+;**************************************************************************************************
+
 
 sub_0367:
 	MVI	A,0x61
@@ -572,7 +645,7 @@ label_0399:
 	SHLD	var_FF07
 	MVI	A,0x01
 	STA	var_FF09
-	JMP	label_0626
+	JMP	ie_and_return_from_int_subroutine
 
 label_03A7:
 	MVI	D,0x0D
@@ -590,7 +663,7 @@ label_03B4:
 	IN	0x68
 	ANI	0x3F
 	STA	var_FF0B
-	JMP	label_0626
+	JMP	ie_and_return_from_int_subroutine
 
 label_03CA:
 	IN	0x78
@@ -603,7 +676,7 @@ label_03CA:
 	STA	var_FF0A
 	XRA	A
 	STA	var_FF11
-	JMP	label_0626
+	JMP	ie_and_return_from_int_subroutine
 
 sub_03E4:
 	LHLD	var_FF07			;load HL from ram
@@ -641,7 +714,7 @@ label_0411:
 	IN	0x48
 	MVI	A,0x40
 	OUT	0x78
-	JMP	label_0626
+	JMP	ie_and_return_from_int_subroutine
 
 sub_041A:
 	MOV	D,M
@@ -798,15 +871,22 @@ label_04F5:
 label_0500:
 	LDA	var_FF03
 	RAR
-	JNC	return_from_int_subroutine
+	JNC	return_from_int_subroutine			;return
 	CALL	sub_078F
+	
 	MVI	A,0x90
 	OUT	0x78
+	
 	MVI	A,0xAA
-	OUT	0x70      ;printer
+	OUT	0x70      							;printer
+	
 	MVI	A,0xFF
 	OUT	0x68
-	JMP	return_from_int_subroutine
+	
+	JMP	return_from_int_subroutine			return
+
+;**************************************************************************************************
+
 
 a0_handler:
 	CALL	sub_0724
@@ -853,7 +933,7 @@ mask_display_loop:
 	CPI	0x00		;is the mask byte zero?
 	RNZ				;we return if the display is not cleared only masked
 
-	LXI	H,var_C000_display_unk
+	LXI	H,var_C050_display_unk
 	MVI	A,0x80
 	MOV	M,A			;move ;0x80 to 0xc050
 
@@ -973,16 +1053,17 @@ label_05FF:
 	LXI	H,var_FFD0
 label_061A:
 	SHLD	var_FFF8
+	
 label_061D:
 	MOV	A,M
 	ORA	A
-	JNZ	label_0626
+	JNZ	ie_and_return_from_int_subroutine
+	
 	MVI	A,0x08
 	OUT	0x78
 	
-label_0626:
+ie_and_return_from_int_subroutine:
 	EI  ;enable interrupts
-
 return_from_int_subroutine:
 	POP	H
 	POP	D
@@ -990,6 +1071,9 @@ return_from_int_subroutine:
 	POP	PSW
 	EI  ;enable interrupts
 	RET
+	
+;**************************************************************************************************
+
 
 sub_062D:
 	IN	0x68
@@ -1006,7 +1090,7 @@ label_063C:
 	CNC	inc_and_store_error_counter
 	JNC	label_063C
 	CALL	RST_3
-
+	
 label_0648:
 	MVI	A,0x40
 	OUT	0x78
@@ -1032,7 +1116,7 @@ sub_0652: sub_0652(F,BC,DE,HL)
 read_port_48_cmd:
 	IN	0x48
 	ANI	0x07		;only the lower 3 bits used?
-	JNZ	label_0687 ;no jump to interesting code that calls external rom
+	JNZ	label_0687 ; label_0687(A,DE)  no jump to interesting code that calls external rom
 
 label_0669:
 	MVI	E,0xFF      ;i dont know if this is a ram addr FIXME
@@ -1052,12 +1136,17 @@ label_066D: ;i think this is an error output of some type
 	MOV	A,E
 	OUT	0x68
 	EI  ;enable interrupts
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine			;return
 	
-label_0687: ; D,A appears to be arg something to do with the printer
+	
+	
+	
+label_0687: 			; label_0687(A,DE)
 	MOV	E,D				;E = arg1
-
-	CPI	0x02			;A ARG0 == "02"?"
+	
+					
+						;
+	CPI	0x02			;case 0x02:
 	JNZ	label_06D3		;A != 02?
 
 	MVI	D,0x84			;A = 02, D = 84
@@ -1087,9 +1176,10 @@ label_06B7:
 	SHLD	var_FF07			;	(0xf01f) = ff07
 	IN	0x70      				;A = (printer)
 	ANI	0x10
-	JZ	label_01A5				;(A & 0x10) == 0?
+	JZ	handle_VT_01A5				;(A & 0x10) == 0?
 	JMP	call_sub_028E_2
 
+;**************************************************************************************************
 
 
 
@@ -1097,9 +1187,11 @@ label_06B7:
 label_06C7:
 	IN	0x70      				;A = printer
 	ANI	0x10
-	JZ	label_0172				;(A & 0x10) == 0?
+	JZ	handle_LF_0172				;(A & 0x10) == 0?
 	MVI	A,0x0A					;A=0A
-	JMP	call_sub_028E
+	JMP	call_test_port_70_and_ret
+
+;**************************************************************************************************
 
 label_06D3:
 	CPI	0x03
@@ -1153,7 +1245,9 @@ label_070A:
 	CPI	0xFF
 	JNZ	label_0781
 	SHLD	var_FF0C
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine		;return
+
+;**************************************************************************************************
 
 sub_0724:
 	LHLD	var_FF00			;load HL from ram
@@ -1161,6 +1255,8 @@ sub_0724:
 	ANI	0x7F
 	MOV	M,A
 	RET
+
+;**************************************************************************************************
 
 inc_and_store_error_counter:
 	PUSH	PSW
@@ -1178,10 +1274,12 @@ label_073E:
 	POP	PSW
 	RET					;function returns the results of roll-over in carry flag
 
+;**************************************************************************************************
+
 sub_0744:
 	LDA	var_FF06				;load argument
 	RAR
-	JNC	label_0758			;length is not odd?
+	JNC	label_0758
 
 	EI  ;enable interrupts
 	LXI	H,var_FF14
@@ -1211,9 +1309,13 @@ label_076D:
 	STA	var_FF0E
 	JMP	read_port_48_cmd
 
+;**************************************************************************************************
+
 sub_077D:
 	LXI	H,var_FF14
 	RET
+
+;**************************************************************************************************
 
 label_0781:
 	MOV	M,E
@@ -1222,7 +1324,9 @@ label_0781:
 	CPI	0x20
 	CZ	sub_077D
 	SHLD	var_FF0C
-	JMP	return_from_int_subroutine
+	JMP	return_from_int_subroutine		;return
+
+;**************************************************************************************************
 
 sub_078F:
 	IN	0x78
@@ -1231,6 +1335,8 @@ sub_078F:
 	JNZ	sub_078F
 	CALL	RST_3
 	RET
+
+;**************************************************************************************************
 
 cpy_str_to_screen_cursor_pos: ;cpy_str_to_screen_cursor_pos(B_reg)
 	PUSH	B				;preserve currrent B reg argument pointer
@@ -1246,6 +1352,8 @@ loop_cpy:
 	ORA	A					;is the string done?
 	JNZ	loop_cpy
 	RET
+	
+;**************************************************************************************************
 
 sub_07AF: ;what in the f?
 	PUSH	D		;store DE
@@ -1260,10 +1368,14 @@ sub_07AF: ;what in the f?
 	POP	D			;restore DE
 	RET
 
+;**************************************************************************************************
+
 sub_07BA:
 	DAD	H
 	RET
-	
+
+;**************************************************************************************************
+
 var_printer_not_ready_string:
 	DB "PRINTER NOT READY"
 	DB 0
@@ -1282,17 +1394,17 @@ var_F0A4    equ 0xF0A4
 
 
 
-var_FF00 	equ 0xFF00
-var_FF02	equ 0xFF02
+var_FF00 	equ 0xFF00				; 0->128->0 cycling counter
+var_FF02	equ 0xFF02				; appears to be a single bit flag
 var_FF03	equ 0xFF03
-var_FF04	equ 0xFF04
-var_FF06	equ 0xFF06
+var_FF04	equ 0xFF04				;circular buffer from FF14 to var_FF20
+var_FF06	equ 0xFF06				; appears to be a single bit flag
 var_FF07	equ 0xFF07				;i see this incrementing like a chr ptr
-var_FF09	equ 0xFF09
+var_FF09	equ 0xFF09				; appears to be a single bit flag
 var_FF0A	equ 0xFF0A
-var_FF0B	equ 0xFF0B
-var_FF0C	equ 0xFF0C
-var_FF0E	equ 0xFF0E
+var_FF0B	equ 0xFF0B				;seems to be a buffer
+var_FF0C	equ 0xFF0C				;circular buffer from FF14 to var_FF20
+var_FF0E	equ 0xFF0E				; appears to be a single bit flag
 var_FF0F	equ 0xFF0F
 var_FF11	equ 0xFF11
 var_FF12	equ 0xFF12
@@ -1309,7 +1421,7 @@ var_FFFC:	equ 0xFFFC
 
 
 var_C000_display_buff equ 0xC000
-var_C000_display_unk equ 0xC050
+var_C050_display_unk equ 0xC050
 
 
 
@@ -1329,18 +1441,27 @@ var_C000_display_unk equ 0xC050
 
 
 ;0000  -----------------------------------
-;      |        PRGRAM MEMORY              |
+;0400 |____________06204.035______________|
+;     |            06204.036              |
 ;0800  -----------------------------------
-;      |       UHHHH JMP LAND              |
-;0000  -----------------------------------
-
-
-;C000  -----------------------------------
-;     |        DISPLAY MEMORY              |
+;     |         UHHHH JMP LAND            |
+;     |                                   |
+;     |                                   |
+;     |                                   |
+;     |                                   |
+;C000  -----------DISPLAY MEMORY----------
+;C050 |        UNKNOWN LOCATION           |
+;     |                                   |
 ;C200  -----------------------------------
-
-
-;F000  -----------------------------------
-;     |         PROGRAM RAM               |
-;FFD0 |            stack                  |
+;     |                                   |
+;     |                                   |
+;     |                                   |
+;     |                                   |
+;     |                                   |
+;F000  ----------unknown vars-------------
+;F0FF |-----------------------------------|
+;     |                                   |
+;FF00 |________main program vars__________|
+;FFD0 |____________stack__________________|
+;FFF8 |__________some vars________________|
 ;FFFF  -----------------------------------
