@@ -44,7 +44,7 @@ RST_4:				;observed to be the keyboard input handler
 	PUSH	B
 	PUSH	D
 	PUSH	H
-	JMP	sub_0652
+	JMP	int_4_handler
 	NOP
 
 ;**************************************************************************************************
@@ -56,7 +56,7 @@ RST_5:
 	PUSH	B
 	PUSH	D
 	PUSH	H
-	JMP	sub_0367
+	JMP	int_5_handler
 	NOP
 
 ;**************************************************************************************************
@@ -104,7 +104,7 @@ init_mem_loop:
 	SHLD	var_FF0C
 
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 
 	LXI	H,0x0642
 	SHLD	var_FF0A
@@ -137,9 +137,8 @@ label_0089:
 	
 	MVI	A,0x02			;whats this about?
 	OUT	0x50
+	
 	IN	0x50
-
-
 
 idle_loop:					; this was observed to be the idle loop
 	LXI	H,0x0028			; init HL
@@ -167,7 +166,7 @@ label_00A6:
 	RAR
 	JNC	label_00CA
 
-	LDA	var_FF0E
+	LDA	printer_not_ready_flag_FF0E
 	RAR
 	JC	label_00CA
 	
@@ -195,12 +194,12 @@ label_00CA:
 ;**************************************************************************************************
 
 
-terminal_emu_handler_00E1: terminal_emu_handler_00E1(var_FF07)
+terminal_emu_handler_00E1: terminal_emu_handler_00E1(char_buff_ptr)
 	PUSH	PSW
 	PUSH	B
 	PUSH	D
 	PUSH	H
-	LHLD	var_FF07			;load HL from ram
+	LHLD	char_buff_ptr			;load HL from ram
 	MOV	A,M
 	CPI	0x0D
 	JZ	handle_CR_0145
@@ -233,7 +232,7 @@ label_0112: 		;label_0112(A_reg, HL_reg)
 	OUT	0x60
 	
 	INX	H
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	
 label_011F:
 	CALL	test_printer_ready_021E
@@ -271,9 +270,9 @@ handle_CR_0145:
 	ANI	0x04
 	JZ	return_from_int_subroutine			;return
 	
-	LHLD	var_FF07			;
+	LHLD	char_buff_ptr			;
 	INX	H						;
-	SHLD	var_FF07			; increment var_FF07
+	SHLD	char_buff_ptr			; increment char_buff_ptr
 	
 	LHLD	var_cursor_col_FF0F			;load HL from ram
 	MOV	A,L
@@ -324,7 +323,7 @@ label_018B:
 
 label_0199:
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	STA	var_FF09
 	JMP	label_0500
 
@@ -359,9 +358,9 @@ handle_VT_01A5:
 	ANI	0xDF
 	OUT	0x60
 	
-	LHLD	var_FF07			;load HL from ram
+	LHLD	char_buff_ptr			;load HL from ram
 	INX	H
-	SHLD	var_FF07			;store incremented var
+	SHLD	char_buff_ptr			;store incremented var
 	
 	XRA	A
 	STA	var_cursor_line_FF11
@@ -389,7 +388,7 @@ label_01F3:
 	CPI	0x20
 	JZ	label_01F3
 	XCHG
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	CPI	0x0D
 	JZ	return_from_int_subroutine					;return
 	
@@ -470,7 +469,7 @@ terminal_cmd_handler_024D:
 	ANI	0x08
 	JZ	return_from_int_subroutine		;return
 
-	LHLD	var_FF07					;switch(var_FF07)P{
+	LHLD	char_buff_ptr					;switch(char_buff_ptr)P{
 	MOV	A,M
 	CPI	0x0A
 	JZ	label_02A0						;case 0x0a: label_02A0()
@@ -503,7 +502,7 @@ label_027D:
 	OUT	0x60
 	
 	INX	H
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	
 	JMP	return_from_int_subroutine					;return
 
@@ -597,12 +596,12 @@ label_0300:
 	INX	H
 	MVI	M,0x0A
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	MVI	A,0x01
 	STA	var_FF09
 
 label_0317:
-	LDA	var_FF0E
+	LDA	printer_not_ready_flag_FF0E
 	RAR
 	JC	label_0332
 	
@@ -627,7 +626,7 @@ label_0332:
 	STA	var_FF09
 	
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	
 	JMP	carriage_return_cursor
 
@@ -635,12 +634,12 @@ label_0345:
 	LDA	var_FF22
 	MOV	B,A
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	DCR	C
 	JNZ	label_02CC
 	JMP	return_from_int_subroutine				;return
 
-	RST	7
+	RST	7										;?????
 
 ;**************************************************************************************************
 
@@ -650,13 +649,13 @@ err_printer_not_ready:
 	CALL	cpy_str_to_screen_cursor_pos		;cpy_str_to_screen_cursor_pos("printer not ready")
 	MVI	A,0x01
 	OUT	0x50
-	STA	var_FF0E
+	STA	printer_not_ready_flag_FF0E
 	JMP	return_from_int_subroutine				;return
 
 ;**************************************************************************************************
 
 
-sub_0367:
+int_5_handler:
 	MVI	A,0x61
 	OUT	0x78
 	IN	0x78
@@ -673,29 +672,29 @@ sub_0367:
 	CPI	0xC0
 	JZ	label_03CA
 	
-	CALL	sub_03E4
+	CALL	send_char_to_screen			; send_char_to_screen(D_reg)
 	JMP	send_02_on_port_78
 
 label_038C:
-	LHLD	var_FF07			;load HL from ram
+	LHLD	char_buff_ptr
 	DCX	H
 	MOV	A,M
 	CPI	0x0D
-	JNZ	label_03A7
-	CALL	sub_03E4
+	JNZ	send_crlf_to_screen
+	CALL	send_char_to_screen			; send_char_to_screen(D_reg)
 
 label_0399:
 	LXI	H,var_F020
-	SHLD	var_FF07
+	SHLD	char_buff_ptr
 	MVI	A,0x01
 	STA	var_FF09
 	JMP	ie_and_return_from_int_subroutine
 
-label_03A7:
+send_crlf_to_screen:
 	MVI	D,0x0D
-	CALL	sub_03E4
+	CALL	send_char_to_screen			; send_char_to_screen(D_reg)
 	MVI	D,0x0A
-	CALL	sub_03E4
+	CALL	send_char_to_screen			; send_char_to_screen(D_reg)
 	JMP	label_0399
 
 label_03B4:
@@ -725,17 +724,17 @@ label_03CA:
 ;**************************************************************************************************
 
 
-sub_03E4:
-	LHLD	var_FF07			;load HL from ram
+send_char_to_screen:						; send_char_to_screen(D_reg)
+	LHLD	char_buff_ptr			;load HL from ram
 	MOV	M,D
 	INX	H
 	MVI	A,0xA8
 	CMP	L
-	JZ	label_03F3
-	SHLD	var_FF07
+	JZ	append_crlf_to_buff
+	SHLD	char_buff_ptr
 	RET
 
-label_03F3:
+append_crlf_to_buff:
 	LXI	H, var_F0A4
 	MVI	M,0x0D
 	INX	H
@@ -778,13 +777,14 @@ sub_041A:
 	EI  ;enable interrupts
 	RAL
 	JC	label_0465
+   ;JMP filter_d_and_store_in_char_buff				; implicit
 
-translate_d_and_store:			;translate_d_and_store(D_reg)
-	LHLD	var_FF00			;load HL from ram
+filter_d_and_store_in_char_buff:			;filter_d_and_store_in_char_buff(D_reg)
+	LHLD	char_buff_cntr_FF00			;load HL from ram
 	CALL	translate_d			;D_reg = translate_d(D_reg)
 	MOV	M,D						;store translated value
 	INX	H
-	SHLD	var_FF00
+	SHLD	char_buff_cntr_FF00
 
 	MOV	A,M
 	ORI	0x80
@@ -853,7 +853,7 @@ label_0465:
 	CPI	0xA4
 	JZ	a4_handler
 	CALL	translate_d_type2			;D_reg = translate_d_type2(A_reg)
-	JZ	translate_d_and_store 			;translate_d_and_store(D_reg = translate_d_type2(A_reg))
+	JZ	filter_d_and_store_in_char_buff 			;filter_d_and_store_in_char_buff(D_reg = translate_d_type2(A_reg))
 	JMP	cycle_var_FFFA
 
 
@@ -874,7 +874,7 @@ label_0497:
 	MOV	A,D
 	ANI	0x1F
 	MOV	D,A
-	CALL	sub_0724
+	CALL	limit_char_buff_cntr
 	LXI	H,0x0000
 	MOV	L,D				; HL == (d_regvar & 0x1f)
 	PUSH	D
@@ -917,7 +917,7 @@ a7_handler:
 
 
 a2_handler: ;takes E as an argument  \ function doesnt get called?
-	CALL	sub_0724
+	CALL	limit_char_buff_cntr
 	MOV	A,E
 	ANI	0x3F
 	LXI	H,0x0000
@@ -967,7 +967,7 @@ label_0500:
 
 
 a0_handler:
-	CALL	sub_0724
+	CALL	limit_char_buff_cntr
 	LXI	D,var_C000_display_buff
 
 	LDA	var_FF02
@@ -1022,7 +1022,7 @@ mask_display_loop:
 	MVI	A,0x80
 	MOV	M,A			;move ;0x80 to 0xc050
 
-	SHLD	var_FF00	;move 0xc050 to 0xff00
+	SHLD	char_buff_cntr_FF00	;move 0xc050 to 0xff00
 	RET
 
 ;**************************************************************************************************
@@ -1033,8 +1033,8 @@ label_0562:
 	OUT	0x50
 	XRA	A
 	STA	var_FF06
-	STA	var_FF0E
-	CALL	sub_0724
+	STA	printer_not_ready_flag_FF0E
+	CALL	limit_char_buff_cntr
 	LXI	H,0x0000
 	MOV	A,D
 	ANI	0x3F
@@ -1053,7 +1053,7 @@ label_0562:
 	ANI	0x7F
 	MOV	E,A
 	DAD	D
-	SHLD	var_FF00
+	SHLD	char_buff_cntr_FF00
 	MOV	A,M
 	ORI	0x80
 	MOV	M,A
@@ -1199,10 +1199,11 @@ label_0648:
 	
 	
 	
-	
+;**************************************************************************************************
+
 	
 
-sub_0652: sub_0652(F,BC,DE,HL)
+int_4_handler: int_4_handler(F,BC,DE,HL)
 	IN	0x50
 	MOV	D,A
 	MVI	A,0x9B
@@ -1212,9 +1213,6 @@ sub_0652: sub_0652(F,BC,DE,HL)
 	LDA	var_FF06
 	RAR
 	JC	return_from_int_subroutine
-
-;**************************************************************************************************
-
 
 read_port_48_cmd:
 	IN	0x48
@@ -1226,7 +1224,7 @@ label_0669:
 	MVI	C,0x90
 
 
-label_066D: ;i think this is an error output of some type
+label_066D:
 	CALL	sub_078F	;sub_078f(0x90, ,0xff)
 	MOV	A,C
 	OUT	0x78			;write 0x90 (sub_078F does not modify C)
@@ -1240,17 +1238,9 @@ label_066D: ;i think this is an error output of some type
 	OUT	0x68
 	EI  ;enable interrupts
 	JMP	return_from_int_subroutine			;return
-	
-;**************************************************************************************************
-
-
-	
-	
+		
 label_0687: 			; label_0687(A,DE)
 	MOV	E,D				;E = arg1
-	
-					
-						;
 	CPI	0x02			;case 0x02:
 	JNZ	label_06D3		;A != 02?
 
@@ -1279,15 +1269,11 @@ label_069D:
 
 label_06B7:
 	LXI	H,var_F01F
-	SHLD	var_FF07			;	(0xf01f) = ff07
+	SHLD	char_buff_ptr			;	(0xf01f) = ff07
 	IN	0x70      				;
 	ANI	0x10
 	JZ	handle_VT_01A5				;(A & 0x10) == 0?
 	JMP	test_port_70_and_ret_from_subroutine
-
-;**************************************************************************************************
-
-
 
 
 label_06C7:
@@ -1296,8 +1282,6 @@ label_06C7:
 	JZ	handle_LF_0172				;(A & 0x10) == 0?
 	MVI	A,0x0A					;A=0A
 	JMP	call_test_port_70_and_ret
-
-;**************************************************************************************************
 
 label_06D3:
 	CPI	0x03
@@ -1356,8 +1340,8 @@ label_070A:
 
 ;**************************************************************************************************
 
-sub_0724:
-	LHLD	var_FF00			;load HL from ram
+limit_char_buff_cntr:
+	LHLD	char_buff_cntr_FF00			;load HL from ram
 	MOV	A,M
 	ANI	0x7F
 	MOV	M,A
@@ -1386,36 +1370,44 @@ label_073E:
 ;**************************************************************************************************
 
 sub_0744:
-	LDA	var_FF06				;load argument
-	RAR
-	JNC	label_0758
-
-	EI  ;enable interrupts
-	LXI	H,var_FF14
-	SHLD	var_FF0C
-	SHLD	var_FF04
+	LDA	var_FF06				;
+	RAR							;
+	JNC	label_0758				; test bit flag to skip
+	EI  						;enable interrupts
+	LXI	H,var_FF14				;HL = var_FF14
+	SHLD	var_FF0C			;var_FF0C = var_FF14
+	SHLD	var_FF04			;var_FF03 = var_FF14
 	JMP	label_075F
-label_0758:						;length is even
-	LDA	var_FF0E
-	RAR									;A  /2
-	JNC	read_port_48_cmd
+	
+label_0758:
+	LDA	printer_not_ready_flag_FF0E
+	RAR								;
+	JNC	read_port_48_cmd			;printer is ready
+								
+	
 label_075F:
 	MVI	A,0x02
 	OUT	0x50
-	PUSH	D
-	LXI	D,var_C000_display_buff
-	LHLD	var_FFFC			;load HL from ram
-	MOV	C,L
-	DAD	D
+
+	PUSH	D						;store D for a moment.. we'll need it later
+	
+	LXI	D,var_C000_display_buff		;DE  = var_C000_display_buff
+	LHLD	var_FFFC				;HL = (var_FFFC)
+	MOV	C,L							;C = (var_FFFC  & 0x00ff)
+	DAD	D							;HL = HL + DE
+	
 	XRA	A
-label_076D:
+zero_screen_area_loop:
 	MOV	M,A
 	INX	H
 	DCR	C
-	JNZ	label_076D
-	POP	D
-	STA	var_FF06
-	STA	var_FF0E
+	JNZ	zero_screen_area_loop
+	
+	POP	D							;recover D from storage
+	
+	STA	var_FF06					;zero
+	STA	printer_not_ready_flag_FF0E					;zero
+	
 	JMP	read_port_48_cmd
 
 ;**************************************************************************************************
@@ -1504,17 +1496,17 @@ var_F0A4    equ 0xF0A4
 
 
 
-var_FF00 	equ 0xFF00				; 0->128->0 cycling counter
+char_buff_cntr_FF00 	equ 0xFF00				; 0->128->0 cycling counter
 var_FF02	equ 0xFF02				; appears to be a single bit flag
 var_FF03	equ 0xFF03
 var_FF04	equ 0xFF04				;circular buffer from FF14 to var_FF20
 var_FF06	equ 0xFF06				; appears to be a single bit flag
-var_FF07	equ 0xFF07				;i see this incrementing like a chr ptr
+char_buff_ptr	equ 0xFF07				;i see this incrementing like a chr ptr
 var_FF09	equ 0xFF09				; appears to be a single bit flag
 var_FF0A	equ 0xFF0A
 var_FF0B	equ 0xFF0B				;seems to be a buffer
 var_FF0C	equ 0xFF0C				;circular buffer from FF14 to var_FF20
-var_FF0E	equ 0xFF0E				; appears to be a single bit flag
+printer_not_ready_flag_FF0E	equ 0xFF0E				; appears to be a single bit flag
 var_cursor_col_FF0F	equ 0xFF0F
 var_cursor_line_FF11	equ 0xFF11
 error_counter_FF12	equ 0xFF12
@@ -1542,7 +1534,7 @@ var_C050_display_unk equ 0xC050
 ;0x40 INPUT/OUTPUT  0b0010 0000,
 ;0x48 INPUT         0b0010 1000		strobe / latch of some sort?
 
-;0x50 INPUT/OUTPUT  0b0101 0000
+;0x50 INPUT/OUTPUT  0b0101 0000  takes commands 1,2,4
 ;0x58 OUTPUT        0b0101 1000, takes commands 0x01,0x02, 0x04
 
 ;0x60 OUTPUT        0b0110 0000
