@@ -180,8 +180,9 @@ var_FFD0	equ 0xFFD0;top of stack
 var_FFF8:	equ 0xFFF8
 var_FFFA:	equ 0xFFFA
 var_cursor_pos_FFFC:	equ 0xFFFC
+var_F020    equ 0xF020
+char_buff_ptr	equ 0xFF07				;i see this incrementing like a chr ptr
 
 
-var_C000_display_buff equ 0xC000
-
+var_FFFC:	equ 0xFFFC
 
