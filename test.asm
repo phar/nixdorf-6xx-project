@@ -51,10 +51,20 @@ init_mem_loop:
 
 
 
-;test_chip_enable:;
-;	LXI	H,0x800
-;	MOV	A,H
-;	JMP test_chip_enable
+;init ram variables
+	LXI	H,var_FF14
+	SHLD	var_FF04		;init variable var_f
+	SHLD	var_FF0C
+
+	LXI	H,var_F020
+	SHLD	char_buff_ptr
+
+	LXI	H,0x0642
+	SHLD	var_FF0A				;FF0A=06 FF0B=42
+
+	LXI	H,var_FFD0					; i assume this is an addr, (it is!)
+	SHLD	var_FFFA
+	SHLD	var_FFF8
 
 
 	IN	0x78
@@ -65,13 +75,14 @@ init_mem_loop:
 
 label_007A:
 	MVI	A,0x10			;send 0x10 then 0x7f
-	OUT	0x60
-	XRA	A
-	OUT	0x60
+	OUT	0x60			;send a \n
+	XRA	A				;
+	OUT	0x60			;send a \x7f command (redraw?)
 	IN	0x40			;read from 0x40
-	RAL
-	JNC	label_0089
-	MVI	B,0x7F
+	RAL					;test port40 for a bit
+	JNC	label_0089		;
+	MVI	B,0x7F			;yes, B_reg = 0x7f, else B_reg = 0x00 for the mask  seems to check if the display
+						;should be cleared or not
 	
 label_0089:
 	CALL	mask_display
