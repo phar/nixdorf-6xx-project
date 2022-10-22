@@ -56,7 +56,7 @@ RST_5:
 	PUSH	B
 	PUSH	D
 	PUSH	H
-	JMP	int_5_handler
+	JMP	int_5_handler ; i think this is the comms input interrupt
 	NOP
 
 ;**************************************************************************************************
@@ -74,7 +74,7 @@ RST_6:
 
 
 ORG 0x0038
-RST_7: ;rom entry
+RST_7: ;warmboot
 	DI					;disable interrupts
 	LXI	SP,var_FFD0		;load stack pointer
 	JMP	RST_0			;hard reboot
@@ -663,7 +663,7 @@ label_0345:
 
 ;**************************************************************************************************
 
-	RST	7										;?????
+	RST	7										;????? warmboot
 
 ;**************************************************************************************************
 
@@ -727,7 +727,7 @@ label_03B4:
 	CNC	inc_and_store_error_counter
 	JNC	label_03B4
 
-	CALL	RST_3
+	CALL	RST_3							;clear error  counter
 	
 	IN	0x68
 	ANI	0x3F
@@ -740,7 +740,7 @@ label_03CA:
 	RAR
 	CNC	inc_and_store_error_counter
 	JNC	label_03CA
-	CALL	RST_3
+	CALL	RST_3							;clear error counter
 	IN	0x68
 	ANI	0x7F
 	STA	var_FF0A
@@ -1140,7 +1140,7 @@ label_05C4:
 	MVI	A,0x64
 	OUT	0x78
 	
-	POP	PSW				;fixe the inconsistant subroutine entry so the exit /can/ be called
+	POP	PSW				;fix the inconsistant subroutine entry so the exit /can/ be called
 	PUSH	B			;
 	PUSH	D			;
 	PUSH	H			;
@@ -1155,10 +1155,13 @@ label_05C4:
 	MOV	D,A
 	CPI	0xA3
 	JZ	label_05EC
+	
 	CPI	0xA2
 	JZ	label_05EC
+	
 	RAL
 	JNC	label_05FF
+	
 	RAL
 	JNC	label_05FF
 	
@@ -1167,28 +1170,33 @@ label_05EC:
 	RAR
 	CNC	inc_and_store_error_counter
 	JNC	label_05EC
-	CALL	RST_3
+	
+	CALL	RST_3							;clear error counter
 	MVI	A,0x40
 	OUT	0x78
 	IN	0x68
 	MOV	E,A
 
 label_05FF:
-	NOP
+	NOP							;iiiiiinteresting alignment for some reason 0x0600
+
 	LHLD	var_FFF8			;load HL from ram
 	MOV	A,M
 	ORA	A
 	JNZ	RST_0				;hard reboot
+
 	MOV	M,D
 	MOV	A,D
 	ORA	A
 	JZ	RST_0			;hard reboot
+	
 	INX	H
 	MOV	M,E
 	INX	H
 	MOV	A,L
 	CPI	0xF0
 	JNZ	label_061A
+
 	LXI	H,var_FFD0
 label_061A:
 	SHLD	var_FFF8
@@ -1228,7 +1236,7 @@ label_063C:
 	RAR
 	CNC	inc_and_store_error_counter
 	JNC	label_063C
-	CALL	RST_3
+	CALL	RST_3							;clear error counter
 	
 label_0648:
 	MVI	A,0x40
@@ -1302,7 +1310,7 @@ label_0687: 			; label_0687(A,DE)
 	JZ	label_06B7		;A == 54?
 	CPI	0x58
 	JNZ	label_069D		;A != 58?
-	RST	7
+	RST	7				;warm boot
 	
 label_069D:
 	CPI	0x53
@@ -1487,7 +1495,7 @@ wait_for_ready_with_abort_timeout:
 	ANI	0x06
 	CNZ	inc_and_store_error_counter		;keep incrementing the counter till a roll over and call rst3?
 	JNZ	wait_for_ready_with_abort_timeout
-	CALL	RST_3
+	CALL	RST_3						;clear error counter
 	RET
 
 ;**************************************************************************************************

@@ -2,35 +2,44 @@ ORG 0x0000
 RST_0:
 	NOP				;reset vector
 	DI				;turn off interrupts
-	LXI	SP,0xFFD0h	;preparing the stack
+	LXI	SP,0xFFD0	;preparing the stack
 	JMP	sub_main
 
 ORG 0x0008
 RST_1:
 	NOP
+	JMP	RST_7
+	JMP	RST_7
+	NOP
 
 ORG 0x0010
 RST_2:
 	NOP
+	JMP	RST_7
+	JMP	RST_7
+	NOP
 
 ORG 0x0018
 RST_3:
-	NOP
+	RET
 
 ORG 0x0020
 RST_4:
-	NOP
+	RET
 
 ORG 0x0028
 RST_5:
-	NOP
+	RET
 
 ORG 0x0030
 RST_6:
-	NOP
+	RET
 
 ORG 0x0038
 RST_7: ;rom entry
+	DI					;disable interrupts
+	LXI	SP,var_FFD0		;load stack pointer
+	JMP	RST_0			;hard reboot
 	NOP
 
 
@@ -92,11 +101,8 @@ label_0089:
 	IN	0x50
 
 
-
 LXI	B,str_yolo
 CALL	cpy_str_to_screen_cursor_pos
-
-
 
 foreverloop:
 	jmp foreverloop
