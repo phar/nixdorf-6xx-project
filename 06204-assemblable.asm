@@ -690,8 +690,10 @@ int_5_handler:
 	MOV	D,A
 	CPI	0x0A
 	JZ	label_038C
+	
 	CPI	0xA5
 	JZ	label_03B4
+	
 	ANI	0xC0
 	CPI	0xC0
 	JZ	label_03CA

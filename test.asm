@@ -101,6 +101,10 @@ label_0089:
 	IN	0x50
 
 
+	LXI	H,0x0050			;
+	SHLD	var_FFFC		; i may have incorrectly assumed where this gets inited
+	
+
 LXI	B,str_yolo
 CALL	cpy_str_to_screen_cursor_pos
 
