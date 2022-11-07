@@ -1597,7 +1597,7 @@ var_C050_display_unk equ 0xC050
 ;0x40 INPUT/OUTPUT  0b0010 0000,
 ;0x48 INPUT         0b0010 1000		strobe / latch of some sort?
 
-;0x50 INPUT/OUTPUT  0b0101 0000  takes commands 1,2,4
+;0x50 INPUT/OUTPUT  0b0101 0000  takes commands 1,2,4, input seems to be keybd
 ;0x58 OUTPUT        0b0101 1000, takes commands 0x01,0x02, 0x04
 
 ;0x60 OUTPUT        0b0110 0000
