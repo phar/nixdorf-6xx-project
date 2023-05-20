@@ -1,5 +1,7 @@
 /*
 
+//Arduino Mega SPI pins: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (SS).
+
 we'll need to get the polioarity right, so i havnt labeled them on the term side
   // SPI_MODE0: Clock idle low (CPOL = 0), data sampled on leading edge (CPHA = 0)
   // SPI_MODE1: Clock idle low (CPOL = 0), data sampled on trailing edge (CPHA = 1)
@@ -9,18 +11,26 @@ we'll need to get the polioarity right, so i havnt labeled them on the term side
 
 RTS:  pin 7
 CTS: pin 6
- MOSI: pin 11
- MISO: pin 12
-            
-                   |------------------------------------------>
-__________         |         ___________                        TX                          
-        11|-o>-----+------o-|1  ('04)  2|-o------------------->
-        13|-o>----+-------o-|3         4|-o------------------->
-          |-      |                                             RTS    TERMINAL
-          |-      |------------------------------------------->         
-          |-              
-         6|-o<------------------------------------------------< CTS              
-        12|-o<------------------------------------------------< RX              
+TERMSEL: pin 8
+
+MOSI: pin 52
+MISO: pin 50
+SCK:  pin 53
+
+                   |------------------------------------------>D 
+__________         |         ___________                         TX                          
+      MOSI|-o>-----+------o-|1  ('04)  2|-o------------------->H 
+         7|-o>----+-------o-|3         4|-o------------------->N 
+          |-      |                                              RTS    TERMINAL
+          |-      |------------------------------------------->R         
+          |-               
+       SCK|-------+-------o-|5         7|-o------------------->J
+          |-      |                                             Clk
+          |-      +------------------------------------------->P
+          |-               
+         8|-o<------------------------------------------------<N TERMSEL              
+         6|-o<------------------------------------------------<B CTS              
+      MISO|-o<------------------------------------------------< RX              
 
 
 
@@ -32,6 +42,7 @@ __________         |         ___________                        TX
 
 const int CTS_PIN = 6;
 const int RTS_PIN = 7;
+const int TERM_PIN = 8;
 #define BIT_SPEED 25000
 
 
@@ -67,7 +78,7 @@ uint8_t word_1;
     word_1 |= 0x04;                //request to send command
 
   //read the state of CTS pin
-    s = digitalRead(CTS_PIN);
+    s = digitalRead(TERM_PIN);
     t = millis();
 
     digitalWrite(RTS_PIN, LOW);
@@ -75,7 +86,7 @@ uint8_t word_1;
     SPI.transfer(word_1);
 
     while (millis() - s < 500){ //see if the CTS pin changes states
-        if (digitalRead(CTS_PIN) != s){
+      if (digitalRead(TERM_PIN) != s){
         f+=1;
       }
     }
