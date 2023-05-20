@@ -1,10 +1,28 @@
 /*
 
- DRDY: pin 6
- CSB: pin 7
+we'll need to get the polioarity right, so i havnt labeled them on the term side
+  // SPI_MODE0: Clock idle low (CPOL = 0), data sampled on leading edge (CPHA = 0)
+  // SPI_MODE1: Clock idle low (CPOL = 0), data sampled on trailing edge (CPHA = 1)
+  // SPI_MODE2: Clock idle high (CPOL = 1), data sampled on leading edge (CPHA = 0)
+  // SPI_MODE3: Clock idle high (CPOL = 1), data sampled on trailing edge (CPHA = 1)
+  
+
+RTS:  pin 7
+CTS: pin 6
  MOSI: pin 11
  MISO: pin 12
- SCK: pin 13
+            
+                   |------------------------------------------>
+__________         |         ___________                        TX                          
+        11|-o>-----+------o-|1  ('04)  2|-o------------------->
+        13|-o>----+-------o-|3         4|-o------------------->
+          |-      |                                             RTS    TERMINAL
+          |-      |------------------------------------------->         
+          |-              
+         6|-o<------------------------------------------------< CTS              
+        12|-o<------------------------------------------------< RX              
+
+
 
  */
 
@@ -18,14 +36,12 @@ const int RTS_PIN = 7;
 
 
 void setup() {
+
   Serial.begin(9600);
   SPI.begin();
-  // SPI_MODE0: Clock idle low (CPOL = 0), data sampled on leading edge (CPHA = 0)
-  // SPI_MODE1: Clock idle low (CPOL = 0), data sampled on trailing edge (CPHA = 1)
-  // SPI_MODE2: Clock idle high (CPOL = 1), data sampled on leading edge (CPHA = 0)
-  // SPI_MODE3: Clock idle high (CPOL = 1), data sampled on trailing edge (CPHA = 1)
-  
+
   SPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
+  pinMode(RTS_PIN,OUTPUT);
 
 }
 
