@@ -12,9 +12,10 @@
 RTS:  pin 7
 CTS: pin 6
 
-MOSI: pin 52
+MOSI: pin 51
 MISO: pin 50
-SCK:  pin 53
+SCK:  pin 52
+
 
 (differential pairs may need to be swapped, these are unconfirmed), we can tune 
 params through SPI modes as well
