@@ -11,7 +11,6 @@
 
 RTS:  pin 7
 CTS: pin 6
-TERMSEL: pin 8
 
 MOSI: pin 52
 MISO: pin 50
@@ -20,23 +19,29 @@ SCK:  pin 53
 (differential pairs may need to be swapped, these are unconfirmed), we can tune 
 params through SPI modes as well
 
-                   +------------------------------------------>D 
+                    /----------------------------------------->D 
 __________         |         ___________                         TX                          
       MOSI|-o>-----+----->o-|1  ('04)  2|-o>------------------>H 
           |                 |           |      
-M        7|-o>----+------>o-|3         4|-o>------------------>N 
+M        7|-o>----+------>o-|3         4|-o>------------------>R 
 E         |-      |         |           |                       RTS    TERMINAL
-G         |-      |------------------------------------------->R         
+G         |-       \------------------------------------------>N         
 A         |-                |           |
-2      SCK|-o>----+------>o-|5         7|-o>------------------>J
+2      SCK|-o>----+------>o-|5         7|-o>------------------>P
 5         |-      |          -----------                        CLK
-6         |-      +------------------------------------------->P
-0         |-               
-         8|-o<------------------------------------------------<N TERMSEL              
-         6|-o<------------------------------------------------<B CTS              
-      MISO|-o<------------------------------------------------<B RX              
+6         |-       \------------------------------------------>J
+0         |-                          
+         6|-o<------------------------------------------------<C CTS (positive logic pin only)              
+      MISO|-o<------------------------------------------------<B RX  (positive logic pin only)          
 
 
+just a thought, that might be wrong, but you may need to connect the arduino
+to the terminal before powering on the terminal because the bitcounter
+is connected directly to the clock lines, and powering or connecting 
+or toggling some weird pins state may increment the bit counter and
+im not sure theres any way to recover (without some trickery we dont know
+about the protocol state machine yet, it might work similar to JTAG)
+)
 
  */
 
@@ -54,7 +59,7 @@ void setup() {
   Serial.begin(9600);
   SPI.begin();
 
-  //shift protocol does appear to be MSB first
+  //shift protocol does appear to be MSB first we can assume mode2 with sampling on the negative going edge
 
   SPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
   pinMode(RTS_PIN,OUTPUT);
@@ -71,17 +76,14 @@ void loop() {
 int t;
 unsigned long s;
 int f = 0;
-uint8_t word_0;
-uint8_t word_1;
+uint8_t word_0 = 0;
+uint8_t word_1 = 0;
+
 
 
 
   //ooook, heres my current best guess for protocol
-    SPI.transfer(0);
-    SPI.transfer(0);              // i think this should clear the state machine if anything is wack
-
-  //fixme confirm enddianess 
-    word_0 = 0x80;                  // i dont think this matters for the first byte
+   word_0 = 0x80;                  // i dont think this matters for the first byte
     word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
     word_1 |= STATE_FLAG_2;                //request to send command
 
@@ -109,3 +111,18 @@ uint8_t word_1;
 
 
 
+void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
+
+    digitalWrite(RTS_PIN, LOW);
+    //delay?
+    SPI.transfer(word_0);
+    SPI.transfer(word_1);
+    //delay?
+    digitalWrite(RTS_PIN, HIGH);
+
+}
+
+uint16_t term_read_lowlevel(uint8_t termid, uint8_t cmd){
+
+
+}
