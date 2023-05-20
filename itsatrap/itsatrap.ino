@@ -73,7 +73,6 @@ uint8_t word_1;
     digitalWrite(RTS_PIN, LOW);
     SPI.transfer(word_0);
     SPI.transfer(word_1);
-    digitalWrite(RTS_PIN, HIGH);
 
     while (millis() - s < 500){ //see if the CTS pin changes states
         if (digitalRead(CTS_PIN) != s){
@@ -84,6 +83,10 @@ uint8_t word_1;
     if(f>0){
       Serial.println("the terminal seems to be responding!");
     }
+    digitalWrite(RTS_PIN, HIGH);
+
+
+    delay(1000);
   }
 
 
