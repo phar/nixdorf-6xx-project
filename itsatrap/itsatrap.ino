@@ -48,11 +48,11 @@ about the protocol state machine yet, it might work similar to JTAG)
 
 #include <SPI.h>
 
-
+void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 
 const int CTS_PIN = 6;
 const int RTS_PIN = 7;
-#define BIT_SPEED 25000
+#define BIT_SPEED 2000
 
 
 void setup() {
@@ -73,6 +73,8 @@ void setup() {
 
 #define TERMINAL_ID 0b10101 // 21
 
+int goflag = false;
+
 void loop() {
 int t;
 unsigned long s;
@@ -81,45 +83,72 @@ uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
 
+    word_0 = 0x00;                  // i dont think this matters for the first byte
 
-
-  //ooook, heres my current best guess for protocol
-   word_0 = 0x80;                  // i dont think this matters for the first byte
     word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
     word_1 |= STATE_FLAG_2;                //request to send command
 
-  //read the state of CTS pin
-    s = digitalRead(CTS_PIN);
-    t = millis();
 
-    digitalWrite(RTS_PIN, LOW);
-    SPI.transfer(word_0);
-    SPI.transfer(word_1);
 
-    while (millis() - s < 500){ //see if the CTS pin changes states
-      if (digitalRead(CTS_PIN) != s){
-        f+=1;
-      }
+  if(Serial.available()){
+    switch(Serial.read()){
+        case '1':
+          term_write_lowlevel(word_0,word_1);
+          break;
+
+        case 'G': //go command
+          Serial.println("sending pattern");
+          goflag = 1;
+          break;
+
+        case 'S': //stop command
+          Serial.println("stopping pattern");
+          goflag = 0;
+          break;
+
     }
 
-    if(f>0){
-      Serial.println("the terminal seems to be responding!");
-    }
-    digitalWrite(RTS_PIN, HIGH);
-
-    delay(1000);
   }
+
+  if(goflag){
+
+    //ooook, heres my current best guess for protocol
+
+    //read the state of CTS pin
+      s = digitalRead(CTS_PIN);
+      t = millis();
+
+      digitalWrite(RTS_PIN, LOW);
+      SPI.transfer(word_0);
+      SPI.transfer(word_1);
+
+      while (millis() - s < 500){ //see if the CTS pin changes states
+        if (digitalRead(CTS_PIN) != s){
+          f+=1;
+        }
+      }
+
+      if(f>0){
+        Serial.println("the terminal seems to be responding!");
+      }
+      digitalWrite(RTS_PIN, HIGH);
+
+      delay(1000);
+    }
+  }
+
+
 
 
 
 void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
 
-    digitalWrite(RTS_PIN, LOW);
+    digitalWrite(RTS_PIN, HIGH);
     //delay?
     SPI.transfer(word_0);
     SPI.transfer(word_1);
     //delay?
-    digitalWrite(RTS_PIN, HIGH);
+    digitalWrite(RTS_PIN, LOW);
 
 }
 
