@@ -55,7 +55,7 @@ const int CTS_PIN = 6;
 const int RTS_PIN = 7;
 #define BIT_SPEED 2000
 
-SoftSPI mySPI(50,51,52);
+SoftSPI mySPI(51,50,52);
 void setup() {
 
   Serial.begin(9600);
@@ -63,7 +63,9 @@ void setup() {
 
   //shift protocol does appear to be MSB first we can assume mode2 with sampling on the negative going edge
 
-  SPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
+  // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
+  mySPI.begin();
+  mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
   pinMode(RTS_PIN,OUTPUT);
 
 }
