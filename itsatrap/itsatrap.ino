@@ -47,6 +47,7 @@ about the protocol state machine yet, it might work similar to JTAG)
  */
 
 #include <SPI.h>
+#include <SoftSPI.h>
 
 void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 
@@ -54,11 +55,11 @@ const int CTS_PIN = 6;
 const int RTS_PIN = 7;
 #define BIT_SPEED 2000
 
-
+SoftSPI mySPI(50,51,52);
 void setup() {
 
   Serial.begin(9600);
-  SPI.begin();
+  mySPI.begin();
 
   //shift protocol does appear to be MSB first we can assume mode2 with sampling on the negative going edge
 
@@ -120,8 +121,8 @@ uint8_t word_1 = 0;
       t = millis();
 
       digitalWrite(RTS_PIN, LOW);
-      SPI.transfer(word_0);
-      SPI.transfer(word_1);
+      mySPI.transfer(word_0);
+      mySPI.transfer(word_1);
 
       while (millis() - s < 500){ //see if the CTS pin changes states
         if (digitalRead(CTS_PIN) != s){
@@ -146,8 +147,8 @@ void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
 
     digitalWrite(RTS_PIN, HIGH);
     //delay?
-    SPI.transfer(word_0);
-    SPI.transfer(word_1);
+    mySPI.transfer(word_0);
+    mySPI.transfer(word_1);
     //delay?
     digitalWrite(RTS_PIN, LOW);
 
