@@ -93,6 +93,7 @@ uint8_t word_1 = 0;
   if(Serial.available()){
     switch(Serial.read()){
         case '1':
+          Serial.println("one shot");
           term_write_lowlevel(word_0,word_1);
           break;
 
