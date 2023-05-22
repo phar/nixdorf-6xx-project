@@ -51,6 +51,11 @@ about the protocol state machine yet, it might work similar to JTAG)
 
 void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 
+void term_begin_transfer();
+void term_end_transfer();
+void term_sync_bitcounter();
+
+
 const int CTS_PIN = 6;
 const int RTS_PIN = 7;
 #define BIT_SPEED 2000
@@ -61,7 +66,7 @@ void setup() {
   Serial.begin(9600);
   mySPI.begin();
 
-  //shift protocol does appear to be MSB first we can assume mode2 with sampling on the negative going edge
+
 
   // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
   mySPI.begin();
@@ -97,7 +102,11 @@ uint8_t word_1 = 0;
     switch(Serial.read()){
         case '1':
           Serial.println("one shot");
-          term_write_lowlevel(word_0,word_1);
+            term_begin_transfer();
+            term_sync_bitcounter();
+             delay(10);
+            term_write_lowlevel(word_0, word_1);
+            term_end_transfer();
           break;
 
         case 'G': //go command
@@ -116,26 +125,11 @@ uint8_t word_1 = 0;
 
   if(goflag){
 
-    //ooook, heres my current best guess for protocol
-
-    //read the state of CTS pin
-      s = digitalRead(CTS_PIN);
-      t = millis();
-
-      digitalWrite(RTS_PIN, LOW);
-      mySPI.transfer(word_0);
-      mySPI.transfer(word_1);
-
-      while (millis() - s < 500){ //see if the CTS pin changes states
-        if (digitalRead(CTS_PIN) != s){
-          f+=1;
-        }
-      }
-
-      if(f>0){
-        Serial.println("the terminal seems to be responding!");
-      }
-      digitalWrite(RTS_PIN, HIGH);
+      term_begin_transfer();
+      term_sync_bitcounter();
+      delay(10);
+      term_write_lowlevel(word_0, word_1);
+      term_end_transfer();
 
       delay(1000);
     }
@@ -145,14 +139,23 @@ uint8_t word_1 = 0;
 
 
 
+
+void term_begin_transfer(){
+    digitalWrite(RTS_PIN, HIGH);
+}
+
+void term_end_transfer(){
+    digitalWrite(RTS_PIN, LOW);
+}
+
+
+void term_sync_bitcounter(){
+    term_write_lowlevel(0xff,0xff);
+}
+
 void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
 
-    digitalWrite(RTS_PIN, HIGH);
-    //delay?
-    mySPI.transfer(word_0);
-    mySPI.transfer(word_1);
-    //delay?
-    digitalWrite(RTS_PIN, LOW);
+
 
 }
 
