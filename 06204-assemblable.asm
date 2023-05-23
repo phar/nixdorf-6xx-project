@@ -86,7 +86,7 @@ RST_7: ;warmboot
 ORG 0x0040
 sub_main:
 	MVI	A,0x06
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 
 	LXI	H,var_F000		;set hl to the first ram address
 	MVI	B,0x00			;init zero into b
@@ -122,9 +122,9 @@ init_mem_loop:
 
 label_007A:
 	MVI	A,0x10			;send 0x10 then 0x7f
-	OUT	0x60			;send a \n
+	OUT	0x60                  ;write to interface card register low			;send a \n
 	XRA	A				;
-	OUT	0x60			;send a \x7f command (redraw?)
+	OUT	0x60                  ;write to interface card register low			;send a \x7f command (redraw?)
 	IN	0x40			;read from 0x40
 	RAL					;test port40 for a bit
 	JNC	label_0089		;
@@ -138,7 +138,7 @@ label_0089:
 	MVI	A,0x02			;whats this about?
 	OUT	0x50
 	
-	IN	0x50
+	IN	0x50                  ;read keyboard
 
 idle_loop:					; this was observed to be the idle loop
 	LXI	H,0x0028			; init HL
@@ -170,13 +170,13 @@ label_00A6:
 	RAR
 	JC	label_00CA
 	
-	IN	0x70						;
+	IN	0x70         ;check printer status bits						;
 	ANI	0x10						; test port 0x70 bit 0x10
 	CNZ	terminal_cmd_handler_024D					; bit is set
 	CZ	terminal_emu_handler_00E1	;if not set
 	
 label_00CA:
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits
 	ANI	0x40						;test if the keyboard latch is set
 	CNZ	RST_4
 
@@ -185,7 +185,7 @@ label_00CA:
 	JC	idle_loop
 
 	MVI	A,0x40
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 
 	IN	0x68			;doesnt appear that this value is ever used
 	JMP	idle_loop
@@ -216,7 +216,7 @@ terminal_emu_handler_00E1: terminal_emu_handler_00E1(char_buff_ptr)
 	
 	CALL	test_printer_ready_021E	;default
 	
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	ANI	0x08
 	JZ	return_from_int_subroutine		;return
 	
@@ -228,21 +228,21 @@ terminal_emu_handler_00E1: terminal_emu_handler_00E1(char_buff_ptr)
 	JZ	label_022E
 
 label_0112: 		;label_0112(A_reg, HL_reg)
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x80
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	INX	H
 	SHLD	char_buff_ptr
 	
 label_011F:
 	CALL	test_printer_ready_021E
-	IN	0x48           ; toggle bit line to ram card									;discarded
-	IN	0x70
+	IN	0x48          ;check keyboard status bits
+	IN	0x70         ;check printer status bits
 	ANI	0x04
 	JZ	label_011F
 	
@@ -254,13 +254,13 @@ label_011F:
 	SHLD	var_cursor_col_FF0F			; var_cursor_col_FF0F = var_cursor_col_FF0F + var_FF0B;
 	
 	MOV	A,E
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x40
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	JMP	return_from_int_subroutine			;return
 
@@ -271,7 +271,7 @@ label_011F:
 
 handle_CR_0145:
 	CALL	test_printer_ready_021E
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	ANI	0x04
 	JZ	return_from_int_subroutine			;return
 	
@@ -281,17 +281,17 @@ handle_CR_0145:
 	
 	LHLD	var_cursor_col_FF0F			;load HL from ram
 	MOV	A,L
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MOV	A,H
 	ORI	0x04
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ORI	0x40
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ANI	0xBF
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 
 carriage_return_cursor:
 	LXI	H,0x0000
@@ -305,9 +305,9 @@ carriage_return_cursor:
 handle_LF_0172:
 	CALL	test_printer_ready_021E
 
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	ANI	0x02
-	IN	0x48           ; toggle bit line to ram card							;discarded
+	IN	0x48          ;check keyboard status bits
 	JZ	handle_LF_0172
 
 	LDA	var_FF0A						;
@@ -322,13 +322,13 @@ label_018B:
 	STA	var_cursor_line_FF11
 
 	MVI	A,0x08
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x20
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 
 label_0199:
 	LXI	H,var_F020
@@ -341,9 +341,9 @@ label_0199:
 handle_VT_01A5:
 	CALL	test_printer_ready_021E
 
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	ANI	0x02
-	IN	0x48           ; toggle bit line to ram card						;iscarded
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card						;iscarded
 	JZ	handle_VT_01A5
 
 	LDA	var_cursor_line_FF11
@@ -356,16 +356,16 @@ handle_VT_01A5:
 	DAD	H
 	DAD	H
 	MOV	A,L
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	MOV	A,H
 	ANI	0x03
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ORI	0x20
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ANI	0xDF
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	LHLD	char_buff_ptr			;load HL from ram
 	INX	H
@@ -380,9 +380,9 @@ handle_VT_01A5:
 
 handle_SP_01DD:
 	CALL	test_printer_ready_021E
-	IN	0x48           ; toggle bit line to ram card			;0b01001000						;discarded
+	IN	0x48          ;check keyboard status bits
 
-	IN	0x70            ;0b01110000
+	IN	0x70         ;check printer status bits            ;0b01110000
 	ANI	0x04
 	JZ	handle_SP_01DD
 
@@ -406,19 +406,19 @@ label_01F3:
 	CPI	0x0D
 	JZ	return_from_int_subroutine					;return
 	
-	IN	0x48           ; toggle bit line to ram card									;discarded
+	IN	0x48          ;check keyboard status bits
 	
 	MOV	A,E
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MOV	A,D
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ORI	0x40
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	ANI	0xBF
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	LHLD	var_cursor_col_FF0F			;load HL from ram
 	DAD	D
@@ -428,7 +428,7 @@ label_01F3:
 ;**************************************************************************************************
 
 test_printer_ready_021E:
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	RAR
 	JC	pop_f_err_printer_not_ready
 	
@@ -444,19 +444,19 @@ pop_f_err_printer_not_ready:
 
 label_022E:
 	MVI	A,0x3D
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x80
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 label_0239:
 	CALL	test_printer_ready_021E
-	IN	0x48           ; toggle bit line to ram card							;results are discarded
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card							;results are discarded
 	
-	IN	0x70
+	IN	0x70         ;check printer status bits
 	ANI	0x08
 	JZ	label_0239
 	
@@ -478,7 +478,7 @@ terminal_cmd_handler_024D:
 	PUSH	H
 	
 	MVI	A,0x00
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	CALL	test_port_70_and_ret
 	
 	ANI	0x08
@@ -508,13 +508,13 @@ label_027B:
 	MVI	A,0x0C
 label_027D:
 	CMA
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x80
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	INX	H
 	SHLD	char_buff_ptr
@@ -526,7 +526,7 @@ label_027D:
 
 
 test_port_70_and_ret:
-	IN	0x70      									;printer
+	IN	0x70         ;check printer status bits      									;printer
 	RAR
 	JC	pop_b_and_jmp_err_printer_not_ready   		;does not return from this call
 	RAR
@@ -544,13 +544,13 @@ call_test_port_70_and_ret:										;A_reg - call_test_port_70_and_ret()
 	CALL	test_port_70_and_ret
 label_02A0:
 	MVI	A,0xF5
-	OUT	0x58
+	OUT	0x58                 ;write to interface card register high
 	
 	MVI	A,0x80
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	XRA	A
 	
 	JMP	label_0199
@@ -560,7 +560,7 @@ label_02A0:
 
 label_02AF:
 	MVI	A,0x05
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	
 	MVI	B,0x28
 	MVI	C,0x0C
@@ -578,7 +578,7 @@ label_02C2:
 	LXI	D,var_C000_display_buff
 	
 label_02CC:
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card
 	LDAX	D
 	ANI	0x7F
 	CPI	0x00
@@ -631,7 +631,7 @@ label_0317:
 	RAR
 	JNC	label_0345
 	
-	IN	0x70      ;printer
+	IN	0x70         ;check printer status bits      ;printer
 	ANI	0x10
 	CNZ	terminal_cmd_handler_024D
 	CZ	terminal_emu_handler_00E1
@@ -640,10 +640,10 @@ label_0317:
 
 label_0332:
 	MVI	A,0x10
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	XRA	A
-	OUT	0x60
+	OUT	0x60                  ;write to interface card register low
 	
 	STA	var_FF09
 	
@@ -681,7 +681,7 @@ err_printer_not_ready:
 
 int_5_handler:
 	MVI	A,0x61
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	IN	0x78
 	ANI	0x40								;check if the keyboard latch is set
 	JNZ	label_03FF
@@ -783,12 +783,12 @@ label_03FF:
 
 send_02_on_port_78:
 	MVI	A,0x02
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 
 label_0411:
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card
 	MVI	A,0x40
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	JMP	ie_and_return_from_int_subroutine
 
 
@@ -994,13 +994,13 @@ label_0500:
 	CALL	wait_for_ready_with_abort_timeout
 	
 	MVI	A,0x90
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	
 	MVI	A,0xAA
-	OUT	0x70
+	OUT	0x70             ;something to do with transmit
 	
 	MVI	A,0xFF
-	OUT	0x68
+	OUT	0x68             ;something to do with transmit2
 	
 	JMP	return_from_int_subroutine			return
 
@@ -1140,7 +1140,7 @@ transmission_error:
 
 label_05C4:
 	MVI	A,0x64
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	
 	POP	PSW				;fix the inconsistant subroutine entry so the exit /can/ be called
 	PUSH	B			;
@@ -1150,7 +1150,7 @@ label_05C4:
 	RAL
 	JC	sub_062D
 	MVI	A,0x04
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	
 	LXI	D,0x0000
 	IN	0x68			;0b01100101
@@ -1175,7 +1175,7 @@ label_05EC:
 	
 	CALL	RST_3							;clear error counter
 	MVI	A,0x40
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	IN	0x68					;0b01101000
 	MOV	E,A
 
@@ -1209,7 +1209,7 @@ label_061D:
 	JNZ	ie_and_return_from_int_subroutine
 	
 	MVI	A,0x08
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	
 ie_and_return_from_int_subroutine:
 	EI  ;enable interrupts
@@ -1230,7 +1230,7 @@ sub_062D:
 	CPI	0xC0
 	JZ	label_063C
 	EI  ;enable interrupts
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card
 	JMP	label_0648
 
 label_063C:
@@ -1242,7 +1242,7 @@ label_063C:
 	
 label_0648:
 	MVI	A,0x40
-	OUT	0x78
+	OUT	0x78             ;write status to interface card
 	LHLD	var_FFF8			;load HL from ram
 	JMP	label_061D
 	
@@ -1253,7 +1253,7 @@ label_0648:
 	
 
 int_4_handler: int_4_handler(F,BC,DE,HL)
-	IN	0x50			;read from keyboard port?
+	IN	0x50                  ;read keyboard 			;read from keyboard port?
 	MOV	D,A				;D_reg: arent i sneeky look at me!
 	
 	MVI	A,0x9B			;
@@ -1265,9 +1265,9 @@ int_4_handler: int_4_handler(F,BC,DE,HL)
 	JC	return_from_int_subroutine
 
 read_port_48_cmd:
-	IN	0x48           ; toggle bit line to ram card
-	ANI	0x07		;only the lower 3 bits used?
-	JNZ	label_0687 ; label_0687(A,DE)  no jump to interesting code that calls external rom
+	IN	0x48          ;check keyboard status bits
+	ANI	0x07		;only the lower 3 bits used?, yes, this makes sense now since these are they keyboard status bits
+	JNZ	handle_modifier_keys ; handle_modifier_keys(A,DE)  no jump to interesting code that calls external rom
 
 label_0669:
 	MVI	E,0xFF      ;i dont know if this is a ram addr FIXME
@@ -1277,18 +1277,18 @@ label_0669:
 label_066D:
 	CALL	wait_for_ready_with_abort_timeout	;sub_078f(0x90, ,0xff)
 	MOV	A,C
-	OUT	0x78			;write 0x90 (wait_for_ready_with_abort_timeout does not modify C)
+	OUT	0x78             ;write status to interface card			;write 0x90 (wait_for_ready_with_abort_timeout does not modify C)
 	CALL	wait_for_ready_with_abort_timeout	;sub_078f(0x90, ,0xff) ;not sure
 	
 	MOV	A,D				;D_reg: you didnt forget about me already did you?
-	OUT	0x70
+	OUT	0x70             ;something to do with transmit
 
 	LDA	var_FF03
 	RAR
 	JC	label_06F3
 
 	MOV	A,E
-	OUT	0x68
+	OUT	0x68             ;something to do with transmit2
 	
 	EI  ;enable interrupts
 	
@@ -1299,7 +1299,7 @@ label_066D:
 
 	
 		
-label_0687: 			; label_0687(A,DE)
+handle_modifier_keys: 			; handle_modifier_keys(A,DE)
 	MOV	E,D				;E = arg1
 	CPI	0x02			;case 0x02:
 	JNZ	label_06D3		;A != 02?
@@ -1330,14 +1330,14 @@ label_069D:
 label_06B7:
 	LXI	H,var_F01F
 	SHLD	char_buff_ptr			;	(0xf01f) = ff07
-	IN	0x70      				;
+	IN	0x70         ;check printer status bits      				;
 	ANI	0x10
 	JZ	handle_VT_01A5				;(A & 0x10) == 0?
 	JMP	test_port_70_and_ret_from_subroutine
 
 
 label_06C7:
-	IN	0x70      				;A =
+	IN	0x70         ;check printer status bits      				;A =
 	ANI	0x10
 	JZ	handle_LF_0172				;(A & 0x10) == 0?
 	MVI	A,0x0A					;A=0A
@@ -1371,7 +1371,7 @@ label_06EE: 						;rom not present got here
 
 label_06F3:
 	EI  ;enable interrupts
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card
 	IN	0x78
 	ANI	0x06
 	JZ	label_070A
@@ -1385,7 +1385,7 @@ label_06F3:
 
 label_070A:
 	MOV	A,E
-	OUT	0x68
+	OUT	0x68             ;something to do with transmit2
 	LHLD	var_FF0C			;load HL from ram
 	MOV	M,D
 	INX	H
@@ -1413,7 +1413,7 @@ inc_and_store_error_counter:
 	PUSH	PSW
 	PUSH	H
 	
-	IN	0x48           ; toggle bit line to ram card
+	IN	0x48          ;check keyboard status bits           ; toggle bit line to ram card
 	
 	LHLD	error_counter_FF12
 	INR	L
