@@ -176,8 +176,8 @@ label_00A6:
 	CZ	terminal_emu_handler_00E1	;if not set
 	
 label_00CA:
-	IN	0x48
-	ANI	0x40
+	IN	0x48           ; toggle bit line to ram card
+	ANI	0x40						;test if the keyboard latch is set
 	CNZ	RST_4
 
 	LDA	var_FF03
@@ -241,7 +241,7 @@ label_0112: 		;label_0112(A_reg, HL_reg)
 	
 label_011F:
 	CALL	test_printer_ready_021E
-	IN	0x48									;discarded
+	IN	0x48           ; toggle bit line to ram card									;discarded
 	IN	0x70
 	ANI	0x04
 	JZ	label_011F
@@ -307,7 +307,7 @@ handle_LF_0172:
 
 	IN	0x70
 	ANI	0x02
-	IN	0x48							;discarded
+	IN	0x48           ; toggle bit line to ram card							;discarded
 	JZ	handle_LF_0172
 
 	LDA	var_FF0A						;
@@ -343,7 +343,7 @@ handle_VT_01A5:
 
 	IN	0x70
 	ANI	0x02
-	IN	0x48						;iscarded
+	IN	0x48           ; toggle bit line to ram card						;iscarded
 	JZ	handle_VT_01A5
 
 	LDA	var_cursor_line_FF11
@@ -380,9 +380,9 @@ handle_VT_01A5:
 
 handle_SP_01DD:
 	CALL	test_printer_ready_021E
-	IN	0x48									;discarded
+	IN	0x48           ; toggle bit line to ram card			;0b01001000						;discarded
 
-	IN	0x70
+	IN	0x70            ;0b01110000
 	ANI	0x04
 	JZ	handle_SP_01DD
 
@@ -406,7 +406,7 @@ label_01F3:
 	CPI	0x0D
 	JZ	return_from_int_subroutine					;return
 	
-	IN	0x48									;discarded
+	IN	0x48           ; toggle bit line to ram card									;discarded
 	
 	MOV	A,E
 	OUT	0x58
@@ -454,7 +454,7 @@ label_022E:
 	
 label_0239:
 	CALL	test_printer_ready_021E
-	IN	0x48							;results are discarded
+	IN	0x48           ; toggle bit line to ram card							;results are discarded
 	
 	IN	0x70
 	ANI	0x08
@@ -578,7 +578,7 @@ label_02C2:
 	LXI	D,var_C000_display_buff
 	
 label_02CC:
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	LDAX	D
 	ANI	0x7F
 	CPI	0x00
@@ -683,7 +683,7 @@ int_5_handler:
 	MVI	A,0x61
 	OUT	0x78
 	IN	0x78
-	ANI	0x40
+	ANI	0x40								;check if the keyboard latch is set
 	JNZ	label_03FF
 	
 	IN	0x68
@@ -786,7 +786,7 @@ send_02_on_port_78:
 	OUT	0x78
 
 label_0411:
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	MVI	A,0x40
 	OUT	0x78
 	JMP	ie_and_return_from_int_subroutine
@@ -1153,7 +1153,7 @@ label_05C4:
 	OUT	0x78
 	
 	LXI	D,0x0000
-	IN	0x68
+	IN	0x68			;0b01100101
 	MOV	D,A
 	CPI	0xA3
 	JZ	label_05EC
@@ -1176,7 +1176,7 @@ label_05EC:
 	CALL	RST_3							;clear error counter
 	MVI	A,0x40
 	OUT	0x78
-	IN	0x68
+	IN	0x68					;0b01101000
 	MOV	E,A
 
 label_05FF:
@@ -1230,7 +1230,7 @@ sub_062D:
 	CPI	0xC0
 	JZ	label_063C
 	EI  ;enable interrupts
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	JMP	label_0648
 
 label_063C:
@@ -1265,7 +1265,7 @@ int_4_handler: int_4_handler(F,BC,DE,HL)
 	JC	return_from_int_subroutine
 
 read_port_48_cmd:
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	ANI	0x07		;only the lower 3 bits used?
 	JNZ	label_0687 ; label_0687(A,DE)  no jump to interesting code that calls external rom
 
@@ -1371,7 +1371,7 @@ label_06EE: 						;rom not present got here
 
 label_06F3:
 	EI  ;enable interrupts
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	IN	0x78
 	ANI	0x06
 	JZ	label_070A
@@ -1413,7 +1413,7 @@ inc_and_store_error_counter:
 	PUSH	PSW
 	PUSH	H
 	
-	IN	0x48
+	IN	0x48           ; toggle bit line to ram card
 	
 	LHLD	error_counter_FF12
 	INR	L
@@ -1592,19 +1592,27 @@ var_C050_display_unk equ 0xC050
 
 
 
+;ports 40->78 are to the io card
 
 ;IOMAP
-;0x40 INPUT/OUTPUT  0b0010 0000,
-;0x48 INPUT         0b0010 1000		strobe / latch of some sort?
+;0x40 INPUT			read from ram expansion card (tbd)
+;0x40 OUTPUT 		poke at FDC (tbd)
+;0x48 INPUT        read the key modifier bits (i assume) from keyboard, and the key pressed latch bit
+;0x48 OUTPUT		(unused in ROM) alternate poke at FDC
+;0x50 INPUT		   read the keyboard state and clear they key ready latch
 
-;0x50 INPUT/OUTPUT  0b0101 0000  takes commands 1,2,4, input seems to be keybd
-;0x58 OUTPUT        0b0101 1000, takes commands 0x01,0x02, 0x04
+;0x50 OUTPUT 		tough to see from the schematic, seems to toggle an unconnected port, could be a feature we dont have?
 
-;0x60 OUTPUT        0b0110 0000
-;0x68 INPUT/OUTPUT  0b0110 1000		seems to read and write bytes, i think this is the IO card
+;0x58 OUTPUT        write to interface card register high
+;0x60 OUTPUT        write to interface card register low
 
-;0x70 INPUT/OUTPUT  0b0111 0000
-;0x78 INPUT/OUTPUT  0b0111 1000
+;0x68 INPUT			read from interface card buffer
+;0x68 OUTPUT 		something to do with transmit (previously predicted this as transmit byte)
+
+;0x70 INPUT			read the interface card "printer status" register
+;0x70 OUTPUT  		something to do with transmit (tbd)
+;0x78 INPUT			read the interface card status register
+;0x78 OUTPUT  		write status to interface card
 
 
 ;0000  -----------------------------------
