@@ -1628,25 +1628,26 @@ var_C050_display_unk equ 0xC050
 ;0000  -----------------------------------
 ;0400 |____________06204.035______________| Bank 0
 ;     |            06204.036              | Bank 1
-;0800  -----------------------------------  Bank 2
-;     |         option rom code           | Bank 3
-;     |                                   | Bank 4
-;     |                                   | Bank 5
-;     |                                   | Bank 6
-;     |                                   | Bank 7
+;0800  ----------- ROM SOCKET 0 ----------  Bank 2
+;     |            ROM SOCKET 1           | Bank 3
+;     |            ROM SOCKET 2           | Bank 4
+;     |            ROM SOCKET 3           | Bank 5
+;     |            ROM SOCKET 4           | Bank 6
+;     |            ROM SOCKET 5           | Bank 7
 ;C000  -----------DISPLAY MEMORY----------
-;C050 |        UNKNOWN LOCATION           |
-;     |                                   |
-;C200  -----------------------------------
-;     |                                   |
-;     |                                   |
-;     |                                   |
-;     |                                   |
-;     |                                   |
-;F000  ----------unknown vars-------------
-;F0FF |-----------------------------------|
-;     |                                   |
-;FF00 |________main program vars__________|
+;C050 |     Mainboard Display Memory      | Bank0
+;     |                                   | Bank1
+;C200  -----------------------------------  Bank2
+;     |     RAM Card Display Memory       | Bank3
+;     |                                   | Bank4
+;     |                                   | Bank5
+;     |                                   | Bank6
+;C8FF  -----------------------------------  Bank7
+;F000 |----------unknown vars-------------| is this real? i dont remember
+;
+;      GAP GAP GAP GAP GAP GAP GAP GAP GAP
+;
+;FF00  ________main program vars__________
 ;FFD0 |____________stack__________________|
 ;FFF8 |__________some vars________________|
 ;FFFF  -----------------------------------
