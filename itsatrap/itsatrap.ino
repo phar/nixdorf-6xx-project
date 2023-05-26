@@ -91,12 +91,10 @@ uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
 
-    word_0 = 0x00;                  // i dont think this matters for the first byte
+    word_0 = 0x80;                  // i dont think this matters for the first byte
 
     word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
     word_1 |= STATE_FLAG_2;                //request to send command
-
-
 
   if(Serial.available()){
     switch(Serial.read()){

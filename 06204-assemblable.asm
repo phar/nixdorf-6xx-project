@@ -343,6 +343,7 @@ handle_VT_01A5:
 
 	IN	0x70         ;check printer status bits
 	ANI	0x02
+	
 	IN	0x48          ;check keyboard status bits
 	JZ	handle_VT_01A5
 
@@ -578,7 +579,7 @@ label_02C2:
 	LXI	D,var_C000_display_buff
 	
 label_02CC:
-	IN	0x48          ;check keyboard status bits          
+	IN	0x48          ;check keyboard status bits
 	LDAX	D
 	ANI	0x7F
 	CPI	0x00
@@ -682,21 +683,22 @@ err_printer_not_ready:
 int_5_handler:
 	MVI	A,0x61
 	OUT	0x78             ;write status to interface card
+
 	IN	0x78             ;read interface card status
-	ANI	0x40
+	ANI	0x40			 ;check the card for status_d6
 	JNZ	label_03FF
 	
 	IN	0x68              ;read interface card buffer
 	MOV	D,A
-	CPI	0x0A
+	CPI	0x0A			  ;check for linefeed?
 	JZ	label_038C
 	
-	CPI	0xA5
-	JZ	label_03B4
+	CPI	0xA5				;is magic character 0xa5?
+	JZ	label_03B4			;stores the next byte & 0x3f into magic memory address var_FF0B
 	
-	ANI	0xC0
+	ANI	0xC0				;is in group of 0xC? character?
 	CPI	0xC0
-	JZ	label_03CA
+	JZ	label_03CA			;looks like these are some kind of formatting code
 	
 	CALL	send_char_to_line_buff			; send_char_to_line_buff(D_reg)
 	JMP	send_02_on_port_78
@@ -784,13 +786,14 @@ label_03FF:
 
 send_02_on_port_78:
 	MVI	A,0x02
-	OUT	0x78             ;write status to interface card
+	OUT	0x78             ;set status_d7 on the  interface card
 
 label_0411:
 	IN	0x48          ;check keyboard status bits
 
 	MVI	A,0x40
 	OUT	0x78             ;write status to interface card
+	
 	JMP	ie_and_return_from_int_subroutine
 
 
@@ -1594,39 +1597,43 @@ var_C000_display_buff equ 0xC000
 var_C050_display_unk equ 0xC050
 
 
-
-;ports 40->78 are to the io card
+ m
 
 ;IOMAP
 ;0x40 INPUT			read from ram expansion card (tbd)
 ;0x40 OUTPUT 		poke at FDC (tbd)
+
 ;0x48 INPUT        read the key modifier bits (i assume) from keyboard, and the key pressed latch bit
 ;0x48 OUTPUT		(unused in ROM) alternate poke at FDC
-;0x50 INPUT		   read the keyboard state and clear they key ready latch
 
+;0x50 INPUT		   read the keyboard state and clear they key ready latch
 ;0x50 OUTPUT 		tough to see from the schematic, seems to toggle an unconnected port, could be a feature we dont have?
 
-;0x58 OUTPUT        write to interface card register high
-;0x60 OUTPUT        write to interface card register low
+;0x58 OUTPUT        write to interface card register high (to printer)
+;0x58 INPUT			floppy io 1
+
+;0x60 OUTPUT        write to interface card register low (to printer)
+;0x60 INPUT 		floppy io 2```
 
 ;0x68 INPUT			read from interface card buffer
-;0x68 OUTPUT 		something to do with transmit (previously predicted this as transmit byte)
+;0x68 OUTPUT 		this seems to be part of latching a byte from the bus for transmit
 
 ;0x70 INPUT			read the interface card "printer status" register
 ;0x70 OUTPUT  		something to do with transmit (tbd)
+
 ;0x78 INPUT			read the interface card status register
 ;0x78 OUTPUT  		write status to interface card
 
 
 ;0000  -----------------------------------
-;0400 |____________06204.035______________|
-;     |            06204.036              |
-;0800  -----------------------------------
-;     |         UHHHH JMP LAND            |
-;     |                                   |
-;     |                                   |
-;     |                                   |
-;     |                                   |
+;0400 |____________06204.035______________| Bank 0
+;     |            06204.036              | Bank 1
+;0800  -----------------------------------  Bank 2
+;     |         option rom code           | Bank 3
+;     |                                   | Bank 4
+;     |                                   | Bank 5
+;     |                                   | Bank 6
+;     |                                   | Bank 7
 ;C000  -----------DISPLAY MEMORY----------
 ;C050 |        UNKNOWN LOCATION           |
 ;     |                                   |
