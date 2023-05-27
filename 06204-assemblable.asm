@@ -345,7 +345,7 @@ handle_VT_01A5:
 	ANI	0x02
 	
 	IN	0x48          ;check keyboard status bits
-	JZ	handle_VT_01A5
+	JZ	handle_VT_01A5							;sure looks like an infinite loop if the modifier key is not pressed
 
 	LDA	var_cursor_line_FF11
 	MOV	D,A
@@ -1002,10 +1002,10 @@ label_0500:
 	OUT	0x78             ;write status to interface card
 	
 	MVI	A,0xAA
-	OUT	0x70             ;something to do with transmit
+	OUT	0x70             ;load tx register byte 1
 	
 	MVI	A,0xFF
-	OUT	0x68             ;something to do with transmit2
+	OUT	0x68             ;load tx register byte 0
 	
 	JMP	return_from_int_subroutine			return
 
@@ -1283,18 +1283,18 @@ label_0669:
 label_066D:
 	CALL	wait_for_ready_with_abort_timeout	;sub_078f(0x90, ,0xff)
 	MOV	A,C
-	OUT	0x78             ;write status to interface card	;write 0x90 (wait_for_ready_with_abort_timeout does not modify C)
+	OUT	0x78             ;write status to interface card	;write 0x90
 	CALL	wait_for_ready_with_abort_timeout	;sub_078f(0x90, ,0xff) ;not sure
 	
 	MOV	A,D				;D_reg: you didnt forget about me already did you?
-	OUT	0x70             ;something to do with transmit
+	OUT	0x70             ;load tx register byte 1
 
 	LDA	var_FF03
 	RAR
 	JC	label_06F3
 
 	MOV	A,E
-	OUT	0x68             ;something to do with transmit2
+	OUT	0x68             ;load tx register byte 0
 	
 	EI  ;enable interrupts
 	
@@ -1391,7 +1391,7 @@ label_06F3:
 
 label_070A:
 	MOV	A,E
-	OUT	0x68             		;something to do with transmit2
+	OUT	0x68             		;load tx register byte 0
 	LHLD	var_FF0C			;load HL from ram
 	MOV	M,D
 	INX	H
@@ -1597,7 +1597,6 @@ var_C000_display_buff equ 0xC000
 var_C050_display_unk equ 0xC050
 
 
- m
 
 ;IOMAP
 ;0x40 INPUT			read from ram expansion card (tbd)
@@ -1607,19 +1606,19 @@ var_C050_display_unk equ 0xC050
 ;0x48 OUTPUT		(unused in ROM) alternate poke at FDC
 
 ;0x50 INPUT		   read the keyboard state and clear they key ready latch
-;0x50 OUTPUT 		tough to see from the schematic, seems to toggle an unconnected port, could be a feature we dont have?
+;0x50 OUTPUT 		takes arguments 0x01, 0x02, 0x04, i think this is connected to ram banksel?
 
 ;0x58 OUTPUT        write to interface card register high (to printer)
 ;0x58 INPUT			floppy io 1
 
 ;0x60 OUTPUT        write to interface card register low (to printer)
-;0x60 INPUT 		floppy io 2```
+;0x60 INPUT 		floppy io 2
 
 ;0x68 INPUT			read from interface card buffer
-;0x68 OUTPUT 		this seems to be part of latching a byte from the bus for transmit
+;0x68 OUTPUT 		tx register byte 0
 
 ;0x70 INPUT			read the interface card "printer status" register
-;0x70 OUTPUT  		something to do with transmit (tbd)
+;0x70 OUTPUT  		tx register byte 1
 
 ;0x78 INPUT			read the interface card status register
 ;0x78 OUTPUT  		write status to interface card
