@@ -122,7 +122,7 @@ uint8_t word_1 = 0;
              delay(10);
             term_write_lowlevel(word_0);
              delay(10);
-            term_write_lowlevel(0xAA);
+            term_write_lowlevel(0x55);
              delay(10);
             term_write_lowlevel(0x55);
              delay(10);
