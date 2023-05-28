@@ -78,7 +78,7 @@ void setup() {
   // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
   mySPI.begin();
   mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
-
+  mySPI.setBitOrder(MSBFIRST);
   pinMode(RTS_PIN,OUTPUT);
   pinMode(CTS_PIN, INPUT_PULLUP);
 }
@@ -174,7 +174,7 @@ void term_end_transfer(){
 
 void term_sync_bitcounter(){
     term_write_lowlevel(0xff);
-    term_write_lowlevel(0xfe;
+    term_write_lowlevel(0xff);
 }
 
 // void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
