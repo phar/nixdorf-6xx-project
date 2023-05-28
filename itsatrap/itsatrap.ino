@@ -122,11 +122,11 @@ uint8_t word_1 = 0;
              delay(10);
             term_write_lowlevel(word_1);
              delay(10);
-            term_write_lowlevel(word_1);
-             delay(10);
-            term_write_lowlevel(word_1);
+            term_write_lowlevel(0x01);
              delay(10);
             term_write_lowlevel(0x10);
+             delay(10);
+            term_write_lowlevel(0x11;
             term_end_transfer();
           break;
 
@@ -164,11 +164,11 @@ uint8_t word_1 = 0;
 
 
 void term_begin_transfer(){
-    // digitalWrite(RTS_PIN, HIGH);
+    digitalWrite(RTS_PIN, HIGH);
 }
 
 void term_end_transfer(){
-    // digitalWrite(RTS_PIN, LOW);
+    digitalWrite(RTS_PIN, LOW);
 }
 
 
@@ -183,10 +183,8 @@ void term_sync_bitcounter(){
 // }
 
 void term_write_lowlevel(uint8_t word_0){
-  digitalWrite(RTS_PIN, HIGH);
   mySPI.transfer(0xfe); 
   mySPI.transfer(word_0);
-  digitalWrite(RTS_PIN, LOW);
 }
 
 
