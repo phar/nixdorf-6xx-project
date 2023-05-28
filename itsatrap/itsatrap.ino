@@ -79,6 +79,7 @@ void setup() {
   mySPI.begin();
   mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
   mySPI.setBitOrder(MSBFIRST);
+  mySPI.setDataMode(SPI_MODE0);
   pinMode(RTS_PIN,OUTPUT);
   pinMode(CTS_PIN, INPUT_PULLUP);
 }
@@ -102,7 +103,7 @@ uint8_t word_1 = 0;
     word_0 = 0x80;                  // i dont think this matters for the first byte
 
     word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
-    word_1 |= STATE_FLAG_2;                //request to send command
+    word_1 |= STATE_FLAG_1;                //request to send command
 
   if(Serial.available()){
     switch(Serial.read()){
@@ -126,7 +127,7 @@ uint8_t word_1 = 0;
              delay(10);
             term_write_lowlevel(0x10);
              delay(10);
-            term_write_lowlevel(0x11;
+            term_write_lowlevel(0x11);
             term_end_transfer();
           break;
 
