@@ -159,9 +159,8 @@ void term_sync_bitcounter(){
 }
 
 void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
-
-
-
+  mySPI.write(word_0);
+  mySPI.write(word_1);
 }
 
 uint16_t term_read_lowlevel(uint8_t termid, uint8_t cmd){
