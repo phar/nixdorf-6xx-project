@@ -55,23 +55,26 @@ void term_begin_transfer();
 void term_end_transfer();
 void term_sync_bitcounter();
 
-
 const int CTS_PIN = 6;
 const int RTS_PIN = 7;
-#define BIT_SPEED 2000
+const int OUT_PIN = 2; //output from term
+const int IN_PIN = 5; //input to term
+const int CLOCK_PIN = 4;
 
-SoftSPI mySPI(51,50,52);
+const int BIT_SPEED = 2000;
+SoftSPI mySPI(IN_PIN,OUT_PIN,CLOCK_PIN);
+
 void setup() {
+  pinMode(IN_PIN,OUTPUT);
+  pinMode(CLOCK_PIN,OUTPUT);
+  pinMode(OUT_PIN, INPUT_PULLUP);
+  pinMode(RTS_PIN,OUTPUT);
+  pinMode(CTS_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
-  mySPI.begin();
 
-
-
-  // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
   mySPI.begin();
   mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
-  pinMode(RTS_PIN,OUTPUT);
 
 }
 
