@@ -157,6 +157,7 @@ void term_end_transfer(){
 
 void term_sync_bitcounter(){
     term_write_lowlevel(0xff);
+    term_write_lowlevel(0xfe;
 }
 
 // void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
