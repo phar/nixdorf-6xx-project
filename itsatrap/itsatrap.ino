@@ -49,7 +49,8 @@ about the protocol state machine yet, it might work similar to JTAG)
 #include <SPI.h>
 #include <SoftSPI.h>
 
-void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
+// void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
+void term_write_lowlevel(uint8_t word_0);
 
 void term_begin_transfer();
 void term_end_transfer();
@@ -110,7 +111,7 @@ uint8_t word_1 = 0;
             term_begin_transfer();
             term_sync_bitcounter();
              delay(10);
-            term_write_lowlevel(word_0, word_1);
+            term_write_lowlevel(word_0);
             term_end_transfer();
           break;
 
@@ -133,7 +134,7 @@ uint8_t word_1 = 0;
       term_begin_transfer();
       term_sync_bitcounter();
       delay(10);
-      term_write_lowlevel(word_0, word_1);
+      term_write_lowlevel(word_0);
       term_end_transfer();
 
       delay(1000);
@@ -155,13 +156,18 @@ void term_end_transfer(){
 
 
 void term_sync_bitcounter(){
-    term_write_lowlevel(0xff,0xff);
+    term_write_lowlevel(0xff);
 }
 
-void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
+// void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
+//   mySPI.transfer(word_0);
+//   mySPI.transfer(word_1);
+// }
+
+void term_write_lowlevel(uint8_t word_0){
   mySPI.transfer(word_0);
-  mySPI.transfer(word_1);
 }
+
 
 uint16_t term_read_lowlevel(uint8_t termid, uint8_t cmd){
 
