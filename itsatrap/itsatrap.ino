@@ -132,6 +132,17 @@ uint8_t word_1 = 0;
           break;
 
 
+        case '3':
+          Serial.println("test1 shot");
+            term_end_transfer();
+            term_begin_transfer();
+            term_sync_bitcounter();
+             delay(10);
+            term_write_lowlevel(word_1);
+            term_end_transfer();
+            // here we leave the CTS floating so we can poke at the circuit
+          break;
+
 
         case 'G': //go command
           Serial.println("sending pattern");
