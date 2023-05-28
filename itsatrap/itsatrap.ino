@@ -183,6 +183,7 @@ void term_sync_bitcounter(){
 // }
 
 void term_write_lowlevel(uint8_t word_0){
+  mySPI.transfer(0xfc);
   mySPI.transfer(word_0);
 }
 
