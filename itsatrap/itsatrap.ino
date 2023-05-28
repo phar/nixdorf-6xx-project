@@ -115,6 +115,23 @@ uint8_t word_1 = 0;
             term_end_transfer();
           break;
 
+        case '2':
+          Serial.println("two shot");
+            term_begin_transfer();
+            term_sync_bitcounter();
+             delay(10);
+            term_write_lowlevel(word_0);
+             delay(10);
+            term_write_lowlevel(0xAA);
+             delay(10);
+            term_write_lowlevel(0x55);
+             delay(10);
+            term_write_lowlevel(0x10);
+            term_end_transfer();
+          break;
+
+
+
         case 'G': //go command
           Serial.println("sending pattern");
           goflag = 1;
