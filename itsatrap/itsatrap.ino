@@ -128,6 +128,17 @@ uint8_t word_1 = 0;
             term_end_transfer();
           break;
 
+        case '3':
+          Serial.println("two shot");
+            term_end_transfer();
+            term_begin_transfer();
+            term_sync_bitcounter();
+             delay(10);
+            term_write_lowlevel(word_1);
+             delay(10);
+            term_write_lowlevel(0x41);
+          break;
+
         case 'G': //go command
           Serial.println("sending pattern");
           goflag = 1;
@@ -182,16 +193,16 @@ void term_write_lowlevel(uint8_t word_0){
 uint8_t w0,w1;
 
 
-//  mySPI.transfer(0xfe); 
-//  mySPI.transfer(word_0);
+ mySPI.transfer(0xfe); 
+ mySPI.transfer(word_0);
 
-  w0 = (0xfe << 1);
-  w0 |= (word_0 >> 7);
+  // w0 = (0xfe << 1);
+  // w0 |= (word_0 >> 7);
 
-  w1 = word_0 << 1;
-  w1 |= 0x01;  
-  mySPI.transfer(w0); 
-  mySPI.transfer(w1);
+  // w1 = word_0 << 1;
+  // w1 |= 0x01;  
+  // mySPI.transfer(w0); 
+  // mySPI.transfer(w1);
 
 
 }
