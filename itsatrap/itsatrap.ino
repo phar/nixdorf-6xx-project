@@ -134,9 +134,7 @@ uint8_t word_1 = 0;
             term_begin_transfer();
             term_sync_bitcounter();
              delay(10);
-            term_write_lowlevel(word_1);
-             delay(10);
-            term_write_lowlevel(0x41);
+            term_write_lowlevel(0x15;
           break;
 
         case 'G': //go command
