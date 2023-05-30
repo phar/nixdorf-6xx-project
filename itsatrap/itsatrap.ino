@@ -79,14 +79,14 @@ void setup() {
   mySPI.begin();
   mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
   mySPI.setBitOrder(MSBFIRST);
-  mySPI.setDataMode(SPI_MODE0);
+  mySPI.setDataMode(SPI_MODE2);
   pinMode(RTS_PIN,OUTPUT);
   pinMode(CTS_PIN, INPUT_PULLUP);
 }
 
 #define STATE_FLAG_0 0x01
-#define STATE_FLAG_1 0x02  
-#define STATE_FLAG_2 0x04  //targets UF7A
+#define STATE_FLAG_1 0x02  //targets UF7A
+#define STATE_FLAG_2 0x04  
 
 #define TERMINAL_ID 0b10101 // 21
 
@@ -134,7 +134,8 @@ uint8_t word_1 = 0;
             term_begin_transfer();
             term_sync_bitcounter();
              delay(10);
-            term_write_lowlevel(0x15;
+            term_write_lowlevel(0x15);
+            term_write_lowlevel(0x41);
           break;
 
         case 'G': //go command
