@@ -88,7 +88,7 @@ void setup() {
 #define STATE_FLAG_1 0x02  //targets UF7A
 #define STATE_FLAG_2 0x04  
 
-#define TERMINAL_ID 0b10101 // 21
+#define TERMINAL_ID 0x08 
 
 int goflag = false;
 
@@ -134,7 +134,7 @@ uint8_t word_1 = 0;
             term_begin_transfer();
             term_sync_bitcounter();
              delay(10);
-            term_write_lowlevel(0x15);
+            term_write_lowlevel(0x08<<3);
             term_write_lowlevel(0x41);
           break;
 
