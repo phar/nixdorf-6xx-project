@@ -130,12 +130,19 @@ uint8_t word_1 = 0;
 
         case '3':
           Serial.println("two shot");
-            term_end_transfer();
             term_begin_transfer();
+
             term_sync_bitcounter();
-             delay(10);
-            term_write_lowlevel(0x08<<3);
+             delay(1);
+
+            term_write_lowlevel(word_1);
+            term_end_transfer();
+             delay(1);
+
+            term_begin_transfer();
             term_write_lowlevel(0x41);
+             delay(5);
+            term_end_transfer();
           break;
 
         case 'G': //go command
