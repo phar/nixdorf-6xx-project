@@ -124,7 +124,7 @@ uint8_t word_1 = 0;
             term_write_lowlevel(word_1);
              delay(1);
             term_write_lowlevel(0x41);
-             delay(10);
+             delay(5);
             term_end_transfer();
           break;
 
