@@ -125,7 +125,7 @@ label_007A:
 	OUT	0x60            ;write to interface card register low			;send a \n
 	XRA	A				;
 	OUT	0x60            ;write to interface card register low			;send a \x7f command (redraw?)
-	IN	0x40            ; read from ram expansion card                      			;read from 0x40
+	IN	0x40
 	RAL					;test port40 for a bit
 	JNC	label_0089		;
 	MVI	B,0x7F			;yes, B_reg = 0x7f, else B_reg = 0x00 for the mask  seems to check if the display
@@ -143,7 +143,7 @@ label_0089:
 idle_loop:					; this was observed to be the idle loop
 	LXI	H,0x0028			; init HL
 
-	IN	0x40                                    ; read from ram expansion card
+	IN	0x40                                  
 	CMA
 	ANI	0x01
 	STA	var_FF02
@@ -1599,8 +1599,8 @@ var_C050_display_unk equ 0xC050
 
 
 ;IOMAP
-;0x40 INPUT			read from ram expansion card (tbd)
-;0x40 OUTPUT 		poke at FDC (tbd)
+;0x40 INPUT			 (tbd)
+;0x40 OUTPUT 		(tbd)
 
 ;0x48 INPUT        read the key modifier bits (i assume) from keyboard, and the key pressed latch bit
 ;0x48 OUTPUT		(unused in ROM) alternate poke at FDC

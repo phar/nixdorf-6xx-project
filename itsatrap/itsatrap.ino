@@ -103,7 +103,7 @@ uint8_t word_1 = 0;
     word_0 = 0x80;                  // i dont think this matters for the first byte
 
     word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
-    word_1 |= STATE_FLAG_1;                //request to send command
+    word_1 |= STATE_FLAG_2;                //request to send command
 
   if(Serial.available()){
     switch(Serial.read()){
@@ -120,9 +120,9 @@ uint8_t word_1 = 0;
           Serial.println("two shot");
             term_begin_transfer();
             term_sync_bitcounter();
-             delay(10);
+             delay(1);
             term_write_lowlevel(word_1);
-             delay(10);
+             delay(1);
             term_write_lowlevel(0x41);
              delay(10);
             term_end_transfer();
@@ -194,14 +194,6 @@ uint8_t w0,w1;
 
  mySPI.transfer(0xfe); 
  mySPI.transfer(word_0);
-
-  // w0 = (0xfe << 1);
-  // w0 |= (word_0 >> 7);
-
-  // w1 = word_0 << 1;
-  // w1 |= 0x01;  
-  // mySPI.transfer(w0); 
-  // mySPI.transfer(w1);
 
 
 }
