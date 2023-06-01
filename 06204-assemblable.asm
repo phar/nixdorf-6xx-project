@@ -52,11 +52,11 @@ RST_4:				;observed to be the keyboard input handler
 
 ORG 0x0028
 RST_5:
-	PUSH	PSW
-	PUSH	B
-	PUSH	D
-	PUSH	H
-	JMP	int_5_handler ; i think this is the comms input interrupt
+	PUSH	PSW  ;11
+	PUSH	B    ;11
+	PUSH	D    ;11
+	PUSH	H    ;11
+	JMP	int_5_handler ; 10 i think this is the comms input interrupt
 	NOP
 
 ;**************************************************************************************************
@@ -143,7 +143,7 @@ label_0089:
 idle_loop:					; this was observed to be the idle loop
 	LXI	H,0x0028			; init HL
 
-	IN	0x40                                  
+	IN	0x40
 	CMA
 	ANI	0x01
 	STA	var_FF02
@@ -184,7 +184,7 @@ label_00CA:
 	RAR
 	JC	idle_loop
 
-	MVI	A,0x40
+	MVI	A,0x40					;
 	OUT	0x78          		   ;write status to interface card
 
 	IN	0x68                    ;read interface card buffer			;
@@ -680,16 +680,17 @@ err_printer_not_ready:
 ;**************************************************************************************************
 
 
-int_5_handler:
-	MVI	A,0x61
-	OUT	0x78             ;write status to interface card
+int_5_handler: ;what i think happens here is that we got an interrupt from an address match so now we need to latch the next byte
+	MVI	A,0x61			;7
+	OUT	0x78             ;10 write status to interface card
 
-	IN	0x78             ;read interface card status
+	IN	0x78             ; read interface card status
 	ANI	0x40			 ;check the card for status_d6
-	JNZ	label_03FF
+	JNZ	label_03FF		; do we have a byte sitting in our tx buffer still?
 	
 	IN	0x68              ;read interface card buffer
 	MOV	D,A
+	
 	CPI	0x0A			  ;check for linefeed?
 	JZ	label_038C
 	
@@ -700,8 +701,8 @@ int_5_handler:
 	CPI	0xC0
 	JZ	label_03CA			;looks like these are some kind of formatting code
 	
-	CALL	send_char_to_line_buff			; send_char_to_line_buff(D_reg)
-	JMP	send_02_on_port_78
+	CALL send_char_to_line_buff			; send_char_to_line_buff(D_reg)
+	JMP	rearm_rx_buffer
 
 label_038C:
 	LHLD	char_buff_ptr
@@ -709,7 +710,7 @@ label_038C:
 	MOV	A,M
 	CPI	0x0D
 	JNZ	send_crlf_to_screen
-	CALL	send_char_to_line_buff			; send_char_to_line_buff(D_reg)
+	CALL send_char_to_line_buff			; send_char_to_line_buff(D_reg)
 
 label_0399:
 	LXI	H,var_F020
@@ -784,9 +785,9 @@ label_03FF:
 
 
 
-send_02_on_port_78:
+rearm_rx_buffer:
 	MVI	A,0x02
-	OUT	0x78             ;set status_d7 on the  interface card
+	OUT	0x78             ;set status_d7 on the  interface card, unlatch serial data?
 
 label_0411:
 	IN	0x48          ;check keyboard status bits

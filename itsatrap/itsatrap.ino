@@ -50,7 +50,7 @@ about the protocol state machine yet, it might work similar to JTAG)
 #include <SoftSPI.h>
 
 // void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
-void term_write_lowlevel(uint8_t word_0);
+uint8_t term_write_lowlevel(uint8_t word_0);
 
 void term_begin_transfer();
 void term_end_transfer();
@@ -85,10 +85,10 @@ void setup() {
 }
 
 #define STATE_FLAG_0 0x01
-#define STATE_FLAG_1 0x02  //targets UF7A
-#define STATE_FLAG_2 0x04  
+#define STATE_FLAG_1 0x02 
+#define STATE_FLAG_2 0x04   //targets UF7A
 
-#define TERMINAL_ID 0x08 
+#define TERMINAL_ID 0x0a 
 
 int goflag = false;
 
@@ -99,76 +99,38 @@ int f = 0;
 uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
-
-    word_0 = 0x80;                  // i dont think this matters for the first byte
-
-    word_1 |= (TERMINAL_ID) << 3;    //set the terminal ID shifted up 3 in MSB
-    word_1 |= STATE_FLAG_2;                //request to send command
-
   if(Serial.available()){
     switch(Serial.read()){
         case '1':
           Serial.println("one shot");
-            term_begin_transfer();
-            term_sync_bitcounter();
-             delay(10);
-            term_write_lowlevel(word_0);
-            term_end_transfer();
-          break;
+                                          //terminal connect to mainframe
+            term_begin_transfer();        //
+            term_sync_bitcounter();       //    
 
-        case '2':
-          Serial.println("two shot");
-            term_begin_transfer();
-            term_sync_bitcounter();
-             delay(1);
-            term_write_lowlevel(word_1);
-             delay(1);
-            term_write_lowlevel(0x41);
-             delay(5);
-            term_end_transfer();
-          break;
 
-        case '3':
-          Serial.println("two shot");
-            term_begin_transfer();
+            delay(10);                     // some delay doesnt matter 
 
-            term_sync_bitcounter();
-             delay(1);
+            //terminal_attention(TERMINAL_ID);
+            term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
+            //fixme, we probably expect RTS here, need to add it to a trace
 
-            term_write_lowlevel(word_1);
-            term_end_transfer();
-             delay(1);
 
-            term_begin_transfer();
-            term_write_lowlevel(0x41);
-             delay(5);
-            term_end_transfer();
-          break;
+            term_write_lowlevel((TERMINAL_ID<<3)|STATE_FLAG_2);   //request to send
 
-        case 'G': //go command
-          Serial.println("sending pattern");
-          goflag = 1;
-          break;
+            for(int i=0;i<5;i++){
+              term_write_lowlevel(0x41);                            //send "A"
+            }
+            term_write_lowlevel(0x10);
+            delay(10);                     // some delay doesnt matter 
 
-        case 'S': //stop command
-          Serial.println("stopping pattern");
-          goflag = 0;
+
+            term_end_transfer();          //terminal disconnect from mainframe
           break;
 
     }
 
   }
 
-  if(goflag){
-
-      term_begin_transfer();
-      term_sync_bitcounter();
-      delay(10);
-      term_write_lowlevel(word_0);
-      term_end_transfer();
-
-      delay(1000);
-    }
   }
 
 
@@ -190,19 +152,29 @@ void term_sync_bitcounter(){
     mySPI.transfer(0xff);
 }
 
-// void term_write_lowlevel(uint8_t word_0,uint8_t word_1){
-//   mySPI.transfer(word_0);
-//   mySPI.transfer(word_1);
-// }
-
-void term_write_lowlevel(uint8_t word_0){
-uint8_t w0,w1;
 
 
- mySPI.transfer(0xfe); 
- mySPI.transfer(word_0);
+uint8_t terminal_attention(uint8_t terminal_id){
+  int i;
 
 
+  if(digitalRead(CTS_PIN)) //rts is already high hack in case its needed
+    return true;
+
+  term_write_lowlevel((TERMINAL_ID<<3));   //terminal attention
+  for(i=0;i<100;i++){
+    delay(2);
+    if(digitalRead(CTS_PIN)){
+      return true;
+    }
+  }  
+  return false;
+}
+
+uint8_t term_write_lowlevel(uint8_t word_0){
+
+  return  mySPI.transfer16((0xfe<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
+  delay(4);  //will need tightening
 }
 
 
