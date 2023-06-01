@@ -110,7 +110,7 @@ uint8_t word_1 = 0;
 
             delay(10);                     // some delay doesnt matter 
 
-            term_write_lowlevel(TERMINAL_ID<<|STATE_FLAG_23);   //terminal attention
+            term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
 
 //           if(terminal_attention(TERMINAL_ID)){ // not ready yet
 
