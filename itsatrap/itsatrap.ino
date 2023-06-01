@@ -104,16 +104,15 @@ uint8_t word_1 = 0;
         case '1':
           Serial.println("one shot");
                                           //terminal connect to mainframe
-            term_begin_transfer();        //
-            term_sync_bitcounter();       //    
+            term_begin_transfer();        //   i think these two lines can happen in reverse order
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
 
 
             delay(10);                     // some delay doesnt matter 
 
-            //terminal_attention(TERMINAL_ID);
             term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
-            //fixme, we probably expect RTS here, need to add it to a trace
 
+//           if(terminal_attention(TERMINAL_ID)){ // not ready yet
 
             term_write_lowlevel((TERMINAL_ID<<3)|STATE_FLAG_2);   //request to send
 
@@ -121,8 +120,9 @@ uint8_t word_1 = 0;
               term_write_lowlevel(0x41);                            //send "A"
             }
             term_write_lowlevel(0x10);
-            delay(10);                     // some delay doesnt matter 
 
+            delay(10);                     // some delay doesnt matter 
+  //         }
 
             term_end_transfer();          //terminal disconnect from mainframe
           break;
