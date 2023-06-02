@@ -161,8 +161,8 @@ uint8_t word_1 = 0;
 
             delay(10);                     // some delay doesnt matter 
             for(int e=0;e<8;e++){
+              term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
              for(int i=0;i<5;i++){
-               term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
                term_write_lowlevel(0x41);                            //send "A"
              }
             }
