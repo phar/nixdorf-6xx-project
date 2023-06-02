@@ -126,8 +126,8 @@ uint8_t word_1 = 0;
 
             term_end_transfer();          //terminal disconnect from mainframe
           break;
-        case '1':
-          Serial.println("one shot");
+        case '2':
+          Serial.println("two shot");
                                           //terminal connect to mainframe
             term_begin_transfer();        //   i think these two lines can happen in reverse order
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
@@ -146,11 +146,36 @@ uint8_t word_1 = 0;
             }
             term_write_lowlevel(0x10);
 
-            delay(10);                     // some delay doesnt matter 
+            delay(100);                     // some delay doesnt matter 
   //         }
 
             term_end_transfer();          //terminal disconnect from mainframe
           break;
+
+        case '3':
+          Serial.println("three");
+                                          //terminal connect to mainframe
+            term_begin_transfer();        //   i think these two lines can happen in reverse order
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+
+            delay(10);                     // some delay doesnt matter 
+            for(int e=0;e<8;e++){
+             for(int i=0;i<5;i++){
+               term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
+               term_write_lowlevel(0x41);                            //send "A"
+             }
+            }
+
+            delay(10);                     // some delay doesnt matter 
+  //         }
+
+            term_end_transfer();          //terminal disconnect from mainframe
+            delay(100);
+          break;
+
+
+
     }
 
   }
