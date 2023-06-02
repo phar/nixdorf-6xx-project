@@ -126,6 +126,7 @@ uint8_t word_1 = 0;
 
             term_end_transfer();          //terminal disconnect from mainframe
           break;
+
         case '2':
           Serial.println("two shot");
                                           //terminal connect to mainframe
@@ -138,11 +139,11 @@ uint8_t word_1 = 0;
 
 //           if(terminal_attention(TERMINAL_ID)){ // not ready yet
 
-            // term_write_lowlevel((TERMINAL_ID<<3));   //request to send
 
             for(int i=0;i<5;i++){
-              term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
-              term_write_lowlevel(0x41);                            //send "A"
+              term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+              term_write_lowlevel(0x41);  
+              delay(10);                          //send "A"
             }
             term_write_lowlevel(0x10);
 
@@ -165,6 +166,7 @@ uint8_t word_1 = 0;
              for(int i=0;i<5;i++){
                term_write_lowlevel(0x41);                            //send "A"
              }
+             delay(10);
             }
 
             delay(10);                     // some delay doesnt matter 
