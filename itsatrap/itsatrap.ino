@@ -113,12 +113,16 @@ uint8_t word_1 = 0;
 
 //           if(terminal_attention(TERMINAL_ID)){ // not ready yet
 
-            // term_write_lowlevel((TERMINAL_ID<<3));   //request to send
+            term_write_lowlevel((TERMINAL_ID<<3));   //request to send
 
             for(int i=0;i<5;i++){
-              term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+            term_write_lowlevel((TERMINAL_ID<<3));   //request to send
+              term_write_lowlevel(TERMINAL_ID<<3|random(0,7));   //terminal attention
               term_write_lowlevel(0x41);                            //send "A"
+              delay(20);
             }
+            
+    
             term_write_lowlevel(0x10);
 
             delay(10);                     // some delay doesnt matter 
