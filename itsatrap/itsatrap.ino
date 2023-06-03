@@ -208,6 +208,7 @@ uint8_t word_1 = 0;
                 term_begin_transfer();        //   i think these two lines can happen in reverse order
                  term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
                 term_write_lowlevel(i);
+                delay(1);
                 term_end_transfer();          //terminal disconnect from mainframe
                 delay(10);
               }
