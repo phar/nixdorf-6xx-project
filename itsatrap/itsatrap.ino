@@ -115,7 +115,7 @@ uint8_t word_1 = 0;
 
             term_write_lowlevel((TERMINAL_ID<<3));   //request to send
 
-            for(int i=0;i<5;i++){
+            for(int i=0;i<20;i++){
             term_write_lowlevel((TERMINAL_ID<<3));   //request to send
               term_write_lowlevel(TERMINAL_ID<<3|random(0,7));   //terminal attention
               term_write_lowlevel(0x41);                            //send "A"
