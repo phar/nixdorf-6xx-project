@@ -160,27 +160,60 @@ uint8_t word_1 = 0;
         case '3':
           Serial.println("three");
                                           //terminal connect to mainframe
-            term_begin_transfer();        //   i think these two lines can happen in reverse order
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
 
 
+            term_begin_transfer();        //   i think these two lines can happen in reverse order
             delay(10);                     // some delay doesnt matter 
             for(int e=0;e<8;e++){
               term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-             for(int i=0;i<5;i++){
-               term_write_lowlevel(0x41);                            //send "A"
-             }
-             delay(10);
+              for(int i=0;i<0xff;i++){
+                term_write_lowlevel(i);
+              }
+              delay(10);
             }
-
             delay(10);                     // some delay doesnt matter 
-  //         }
-
-            term_end_transfer();          //terminal disconnect from mainframe
+           term_end_transfer();          //terminal disconnect from mainframe
             delay(100);
           break;
+        
+        case '4':
+          Serial.println("four");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
 
 
+            for(int e=0;e<8;e++){
+              term_begin_transfer();        //   i think these two lines can happen in reverse order
+              delay(10);                     // some delay doesnt matter 
+              term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
+              for(int i=0;i<0xff;i++){
+                term_write_lowlevel(i);
+              }
+              term_end_transfer();          //terminal disconnect from mainframe
+              delay(10);
+            }
+            delay(100);
+            break;
+
+        case '5':
+          Serial.println("five");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+
+            for(int e=0;e<8;e++){
+              delay(10);                     // some delay doesnt matter 
+              for(int i=0;i<0xff;i++){
+                term_begin_transfer();        //   i think these two lines can happen in reverse order
+                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
+                term_write_lowlevel(i);
+                term_end_transfer();          //terminal disconnect from mainframe
+                delay(10);
+              }
+            }
+            delay(100);
+            break;
 
     }
 
