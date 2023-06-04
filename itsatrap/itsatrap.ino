@@ -271,7 +271,7 @@ uint8_t word_1 = 0;
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
                   term_clock_rts();
-                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
                   term_clock_rts();
                    term_write_lowlevel(swapBitOrder(i));
                 // }                
@@ -295,7 +295,24 @@ uint8_t word_1 = 0;
               }
             delay(100);
             break;
+        case 'A':
+          Serial.println("aeeee");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
 
+              for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3));   //terminal attention
+                  term_clock_rts();
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
+                  term_clock_rts();
+                   term_write_lowlevel(swapBitOrder(i));
+                  term_clock_rts();
+                // }                
+                delay(10);
+              }
+            delay(100);
+            break;
 
 
     }
