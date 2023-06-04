@@ -224,9 +224,28 @@ uint8_t word_1 = 0;
                 // if(isprint(i)){
                   term_begin_transfer();        //   i think these two lines can happen in reverse order
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
-                  term_write_lowlevel(i);
+                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2|STATE_FLAG_1);   //terminal attention
+                   term_write_lowlevel(i);
                   term_end_transfer();          //terminal disconnect from mainframe
                   term_begin_transfer();        //   i think these two lines can happen in reverse order
+                  term_end_transfer();          //terminal disconnect from mainframe
+                // }                
+                delay(10);
+              }
+            delay(100);
+            break;
+        case '7':
+          Serial.println("seven");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+              for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+                  term_end_transfer();          //terminal disconnect from mainframe
+                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                   term_write_lowlevel(i);
                   term_end_transfer();          //terminal disconnect from mainframe
                 // }                
                 delay(10);
