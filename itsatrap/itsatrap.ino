@@ -69,6 +69,19 @@ const int BIT_SPEED = 2000;
 
 #define BIT_SPEED 2000
 
+uint8_t swapBitOrder(uint8_t byte) {
+    uint8_t result = 0;
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        if ((byte & (1 << i)) != 0) {
+            result |= (1 << (7 - i));
+        }
+    }
+
+    return result;
+}
+
 SoftSPI mySPI(MISO_PIN,MOSI_PIN,SCK_PIN);
 void setup() {
 
@@ -257,9 +270,25 @@ uint8_t word_1 = 0;
 
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
                   term_clock_rts();
-                   term_write_lowlevel(i);
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_2));   //terminal attention
+                  term_clock_rts();
+                   term_write_lowlevel(swapBitOrder(i));
+                // }                
+                delay(10);
+              }
+            delay(100);
+            break;
+        case '9':
+          Serial.println("nine");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+              for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_2));   //terminal attention
+                  term_clock_rts();
+                   term_write_lowlevel(swapBitOrder(i));
                   term_clock_rts();
                 // }                
                 delay(10);
@@ -285,11 +314,11 @@ void term_clock_rts(){
 }
 
 void term_begin_transfer(){
-    digitalWrite(RTS_PIN, HIGH);
+    digitalWrite(RTS_PIN, LOW);
 }
 
 void term_end_transfer(){
-    digitalWrite(RTS_PIN, LOW);
+    digitalWrite(RTS_PIN, HIGH);
 }
 
 
