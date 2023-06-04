@@ -47,7 +47,7 @@ about the protocol state machine yet, it might work similar to JTAG)
  */
 
 #include <SPI.h>
-#include <SoftSPI.h>
+// #include <SoftSPI.h>
 
 // void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 uint8_t term_write_lowlevel(uint8_t word_0);
@@ -82,7 +82,9 @@ uint8_t swapBitOrder(uint8_t byte) {
     return result;
 }
 
-SoftSPI mySPI(MISO_PIN,MOSI_PIN,SCK_PIN);
+// SoftSPI mySPI(MISO_PIN,MOSI_PIN,SCK_PIN);
+#define mySPI SPI
+
 void setup() {
 
   Serial.begin(9600);
@@ -90,7 +92,8 @@ void setup() {
 
   // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
   mySPI.begin();
-  mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
+  // mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
+  mySPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(SPI_MODE2);
   pinMode(RTS_PIN,OUTPUT);
@@ -271,7 +274,7 @@ uint8_t word_1 = 0;
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
                   term_clock_rts();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_clock_rts();
                    term_write_lowlevel(swapBitOrder(i));
                 // }                
@@ -302,12 +305,17 @@ uint8_t word_1 = 0;
 
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
-                  term_clock_rts();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_clock_rts();
                    term_write_lowlevel(i);
                   term_clock_rts();
+                  delay(1);
+
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1 |STATE_FLAG_2);   //terminal attention
+                  term_clock_rts();
+                   term_write_lowlevel(i);
+                  term_clock_rts();
+                  delay(1);
                 // }                
                 delay(10);
               }
