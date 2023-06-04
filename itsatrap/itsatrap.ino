@@ -241,12 +241,26 @@ uint8_t word_1 = 0;
 
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
-                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                  term_clock_rts();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
-                  term_end_transfer();          //terminal disconnect from mainframe
-                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                  term_clock_rts();
                    term_write_lowlevel(i);
-                  term_end_transfer();          //terminal disconnect from mainframe
+                // }                
+                delay(10);
+              }
+            delay(100);
+            break;
+        case '8':
+          Serial.println("eight");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+              for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+                  term_clock_rts();
+                   term_write_lowlevel(i);
+                  term_clock_rts();
                 // }                
                 delay(10);
               }
@@ -264,7 +278,11 @@ uint8_t word_1 = 0;
 
 
 
+void term_clock_rts(){
 
+    digitalWrite(RTS_PIN, LOW); //logic positive logic verified.. idle state of the line is high
+    digitalWrite(RTS_PIN, HIGH);
+}
 
 void term_begin_transfer(){
     digitalWrite(RTS_PIN, HIGH);
