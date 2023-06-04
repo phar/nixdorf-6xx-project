@@ -215,6 +215,39 @@ uint8_t word_1 = 0;
             }
             delay(100);
             break;
+        case '6':
+          Serial.println("six");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+              for(int i=0;i<0xff;i++){
+                if(isprint(i)){
+                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+                  term_write_lowlevel(i);
+                  term_end_transfer();          //terminal disconnect from mainframe
+                }                
+                delay(10);
+              }
+            delay(100);
+            break;
+        case '7':
+          Serial.println("seven");  //reversing RTS
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+              for(int i=0;i<0xff;i++){
+                 if(isprint(i)){
+                  term_end_transfer();          //terminal disconnect from mainframe
+                   term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
+                  term_write_lowlevel(i);
+                  term_begin_transfer();        //   i think these two lines can happen in reverse order
+                 }                  
+                delay(10);
+              }
+            delay(100);
+            break;
+
+
 
     }
 
