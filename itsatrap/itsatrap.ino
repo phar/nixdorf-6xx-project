@@ -271,7 +271,7 @@ uint8_t word_1 = 0;
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
                   term_clock_rts();
-                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_2));   //terminal attention
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
                   term_clock_rts();
                    term_write_lowlevel(swapBitOrder(i));
                 // }                
@@ -286,7 +286,7 @@ uint8_t word_1 = 0;
 
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
-                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_2));   //terminal attention
+                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
                   term_clock_rts();
                    term_write_lowlevel(swapBitOrder(i));
                   term_clock_rts();
