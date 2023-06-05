@@ -319,6 +319,37 @@ uint8_t word_1 = 0;
               }
             delay(100);
             break;
+        case 'B':
+          /*
+            ok here goes the theory, we've been using "RTS" wrong, in the LA its pretty clear that RTS
+            has direct control of the latch from the serial register and there seems to be no way to 
+            clock speed our way out of the fact that when the interrupt triggers theres maybe 20 instructions
+            at most before the read from the latch, but theres nothing that prevents me from sending the data first
+            and latching it into the register,  then presenting the address to the terminal to trigger the interrupt.
+
+            and while this still seems inefficient to send two bytes just to get the terminal to display a single byte
+            it occurs to me that this might actually speed up sending the same data to multiple terminals if it
+            was indeed intended to work this way
+          */
+          Serial.println("buzz");
+                                      
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+
+              for(int i=0;i<0xff;i++){  
+                   term_write_lowlevel(i);
+                   term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                   term_clock_rts();
+                   delay(1);
+               }
+               delay(10);//golomb 
+              for(int i=0;i<0xff;i++){  
+                   term_write_lowlevel(i);
+                   term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1|STATE_FLAG_2);   //terminal attention
+                   term_clock_rts();
+                   delay(1);
+               }
+            delay(100);
+            break;
 
 
     }
