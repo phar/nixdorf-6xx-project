@@ -85,7 +85,7 @@ RST_7: ;warmboot
 
 ORG 0x0040
 sub_main:
-	MVI	A,0x06
+	MVI	A,0x06			;reset status_d7 if restat_state_machin and reset UF8
 	OUT	0x78             ;write status to interface card
 
 	LXI	H,var_F000		;set hl to the first ram address
@@ -560,7 +560,7 @@ label_02A0:
 
 
 label_02AF:
-	MVI	A,0x05
+	MVI	A,0x05			;reset UF8 and UC7B and latch
 	OUT	0x78             ;write status to interface card
 	
 	MVI	B,0x28
@@ -681,7 +681,7 @@ err_printer_not_ready:
 
 
 int_5_handler: ;what i think happens here is that we got an interrupt from an address match so now we need to latch the next byte
-	MVI	A,0x61			;7
+	MVI	A,0x61			 ;UA5A Q=0 UA5B Q=1 set UC7B
 	OUT	0x78             ;10 write status to interface card
 
 	IN	0x78             ; read interface card status
@@ -786,7 +786,7 @@ label_03FF:
 
 
 rearm_rx_buffer:
-	MVI	A,0x02
+	MVI	A,0x02				;reset status_d7
 	OUT	0x78             ;set status_d7 on the  interface card, unlatch serial data?
 
 label_0411:
@@ -1155,7 +1155,7 @@ label_05C4:
 	
 	RAL
 	JC	sub_062D
-	MVI	A,0x04
+	MVI	A,0x04			;reset UF8
 	OUT	0x78             ;write status to interface card
 	
 	LXI	D,0x0000

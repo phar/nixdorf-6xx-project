@@ -116,243 +116,29 @@ uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
   if(Serial.available()){
-    switch(Serial.read()){
-        case '1':
-          Serial.println("one shot");
-                                          //terminal connect to mainframe
-            term_begin_transfer();        //   i think these two lines can happen in reverse order
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-
-            delay(10);                     // some delay doesnt matter 
-
-
-//           if(terminal_attention(TERMINAL_ID)){ // not ready yet
-
-            term_write_lowlevel((TERMINAL_ID<<3));   //request to send
-
-            for(int i=0;i<20;i++){
-            term_write_lowlevel((TERMINAL_ID<<3));   //request to send
-              term_write_lowlevel(TERMINAL_ID<<3|random(0,7));   //terminal attention
-              term_write_lowlevel(0x41);                            //send "A"
-              delay(20);
-            }
-            
-    
-            term_write_lowlevel(0x10);
-
-            delay(10);                     // some delay doesnt matter 
-  //         }
-
-            term_end_transfer();          //terminal disconnect from mainframe
-          break;
-
-        case '2':
-          Serial.println("two shot");
-                                          //terminal connect to mainframe
-            term_begin_transfer();        //   i think these two lines can happen in reverse order
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-
-            delay(10);                     // some delay doesnt matter 
-
-
-//           if(terminal_attention(TERMINAL_ID)){ // not ready yet
-
-
-            for(int i=0;i<5;i++){
-              term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
-              term_write_lowlevel(0x41);  
-              delay(10);                          //send "A"
-            }
-            term_write_lowlevel(0x10);
-
-            delay(100);                     // some delay doesnt matter 
-  //         }
-
-            term_end_transfer();          //terminal disconnect from mainframe
-          break;
-
-        case '3':
-          Serial.println("three");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-
-            term_begin_transfer();        //   i think these two lines can happen in reverse order
-            delay(10);                     // some delay doesnt matter 
-            for(int e=0;e<8;e++){
-              term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-              for(int i=0;i<0xff;i++){
-                term_write_lowlevel(i);
-              }
-              delay(10);
-            }
-            delay(10);                     // some delay doesnt matter 
-           term_end_transfer();          //terminal disconnect from mainframe
-            delay(100);
-          break;
-        
-        case '4':
-          Serial.println("four");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-
-            for(int e=0;e<8;e++){
-              term_begin_transfer();        //   i think these two lines can happen in reverse order
-              delay(10);                     // some delay doesnt matter 
-              term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-              for(int i=0;i<0xff;i++){
-                term_write_lowlevel(i);
-              }
-              term_end_transfer();          //terminal disconnect from mainframe
-              delay(10);
-            }
-            delay(100);
-            break;
-
-        case '5':
-          Serial.println("five");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-
-            for(int e=0;e<8;e++){
-              delay(10);                     // some delay doesnt matter 
-              for(int i=0;i<0xff;i++){
-                term_begin_transfer();        //   i think these two lines can happen in reverse order
-                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-                term_write_lowlevel(i);
-                delay(1);
-                term_end_transfer();          //terminal disconnect from mainframe
-                delay(10);
-              }
-            }
-            delay(100);
-            break;
-        case '6':
-          Serial.println("six");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-              for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                  term_begin_transfer();        //   i think these two lines can happen in reverse order
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
-                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2|STATE_FLAG_1);   //terminal attention
-                   term_write_lowlevel(i);
-                  term_end_transfer();          //terminal disconnect from mainframe
-                  term_begin_transfer();        //   i think these two lines can happen in reverse order
-                  term_end_transfer();          //terminal disconnect from mainframe
-                // }                
-                delay(10);
-              }
-            delay(100);
-            break;
-        case '7':
-          Serial.println("seven");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-              for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                  term_clock_rts();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_2);   //terminal attention
-                  term_clock_rts();
-                   term_write_lowlevel(i);
-                // }                
-                delay(10);
-              }
-            delay(100);
-            break;
-        case '8':
-          Serial.println("eight");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-              for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                  term_clock_rts();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_clock_rts();
-                   term_write_lowlevel(swapBitOrder(i));
-                // }                
-                delay(10);
-              }
-            delay(100);
-            break;
-        case '9':
-          Serial.println("nine");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-              for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                 term_write_lowlevel(swapBitOrder(TERMINAL_ID<<3|STATE_FLAG_1));   //terminal attention
-                  term_clock_rts();
-                   term_write_lowlevel(swapBitOrder(i));
-                  term_clock_rts();
-                // }                
-                delay(10);
-              }
-            delay(100);
-            break;
-        case 'A':
-          Serial.println("aeeee");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-
-              for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                   term_write_lowlevel(i);
-                  term_clock_rts();
-                  delay(1);
-
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1 |STATE_FLAG_2);   //terminal attention
-                   term_write_lowlevel(i);
-                  term_clock_rts();
-                  delay(1);
-                // }                
-                delay(10);
-              }
-            delay(100);
-            break;
+    switch(Serial.read()){    
         case 'B':
-          /*
-            ok here goes the theory, we've been using "RTS" wrong, in the LA its pretty clear that RTS
-            has direct control of the latch from the serial register and there seems to be no way to 
-            clock speed our way out of the fact that when the interrupt triggers theres maybe 20 instructions
-            at most before the read from the latch, but theres nothing that prevents me from sending the data first
-            and latching it into the register,  then presenting the address to the terminal to trigger the interrupt.
-
-            and while this still seems inefficient to send two bytes just to get the terminal to display a single byte
-            it occurs to me that this might actually speed up sending the same data to multiple terminals if it
-            was indeed intended to work this way
-          */
-          Serial.println("buzz");
-                                      
+          Serial.println("the bee movie wasnt that funny");
+                                          //terminal connect to mainframe
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
 
-              for(int i=0;i<0xff;i++){  
-                   term_write_lowlevel(i);
-                   term_clock_rts();
-                   term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                   delay(1);
-               }
-               delay(10);//golomb 
-              for(int i=0;i<0xff;i++){  
-                   term_write_lowlevel(i);
-                   term_clock_rts();
-                   term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1|STATE_FLAG_2);   //terminal attention
-                   delay(1);
-               }
-            delay(100);
-            break;
+              for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                for(int e=0;e<7;e++){
+                  term_begin_transfer();                //i have to go low at least at the begining for the interface card to even hear me on the differential tranciever
+                 term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
 
 
-    }
+                  term_write_lowlevel(i);
+                  term_end_transfer();
+                  delay(10); 
+                }
+
+                // }                
+                delay(100);
+              }
+            delay(200);
+            break;    }
 
   }
 
