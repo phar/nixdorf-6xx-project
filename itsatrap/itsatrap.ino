@@ -134,7 +134,7 @@ uint8_t word_1 = 0;
                 delay(100);
               }
             delay(200);
-            printf("done.");
+            Serial.print("done.");
 
             break;   
 
@@ -154,7 +154,7 @@ uint8_t word_1 = 0;
                 // }                
                 delay(100);
               }
-              printf("done.");
+              Serial.print("done.");
             delay(200);
             break;               
         case 'D':
@@ -176,7 +176,7 @@ uint8_t word_1 = 0;
                 delay(100);
               }
             delay(200);
-              printf("done.");
+              Serial.print("done.");
             break;               
 
              }
