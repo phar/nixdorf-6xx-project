@@ -121,8 +121,7 @@ uint8_t word_1 = 0;
           Serial.println("the bee movie wasnt that funny");
                                           //terminal connect to mainframe
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-              for(int e=0;e<7;e++){
-
+              for(int e=0;e<8;e++){
                 for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
@@ -131,12 +130,51 @@ uint8_t word_1 = 0;
                   term_end_transfer();
                   delay(10); 
                 }
-
                 // }                
                 delay(100);
               }
             delay(200);
-            break;    }
+            break;   
+
+        case 'C':
+          Serial.println("C");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+              for(int e=0;e<8;e++){
+                for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_write_lowlevel(i);
+                  term_begin_transfer();            
+                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
+                  term_end_transfer();
+                  delay(10); 
+                }
+                // }                
+                delay(100);
+              }
+            delay(200);
+            break;               
+        case 'D':
+          Serial.println("D");
+                                          //terminal connect to mainframe
+            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+              for(int e=0;e<8;e++){
+                for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_begin_transfer();            
+                  term_write_lowlevel(i);
+                  term_end_transfer();
+                  term_begin_transfer();            
+                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
+                  term_end_transfer();
+                  delay(10); 
+                }
+                // }                
+                delay(100);
+              }
+            delay(200);
+            break;                 
+             }
 
   }
 
