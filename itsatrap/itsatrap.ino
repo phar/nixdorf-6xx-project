@@ -125,10 +125,8 @@ uint8_t word_1 = 0;
               for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
                 for(int e=0;e<7;e++){
-                  term_begin_transfer();                //i have to go low at least at the begining for the interface card to even hear me on the differential tranciever
                  term_write_lowlevel(TERMINAL_ID<<3);   //terminal attention
-
-
+                  term_begin_transfer();            
                   term_write_lowlevel(i);
                   term_end_transfer();
                   delay(10); 
