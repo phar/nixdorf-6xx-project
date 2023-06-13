@@ -134,6 +134,8 @@ uint8_t word_1 = 0;
                 delay(100);
               }
             delay(200);
+            print("done.");
+
             break;   
 
         case 'C':
@@ -152,6 +154,7 @@ uint8_t word_1 = 0;
                 // }                
                 delay(100);
               }
+              print("done.");
             delay(200);
             break;               
         case 'D':
@@ -173,7 +176,9 @@ uint8_t word_1 = 0;
                 delay(100);
               }
             delay(200);
-            break;                 
+              print("done.");
+            break;               
+
              }
 
   }
