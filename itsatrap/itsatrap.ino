@@ -190,7 +190,7 @@ uint8_t word_1 = 0;
                   delay(1);  
                 }
 
-              }
+              
               Serial.print("done.");
             delay(200);
             break;              
