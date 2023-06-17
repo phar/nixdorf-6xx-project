@@ -161,13 +161,11 @@ uint8_t word_1 = 0;
           Serial.println("D");
                                           //terminal connect to mainframe
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-              for(int e=0;e<8;e++){
+              for(int e=0;e<4;e++){
                 for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
-                  term_begin_transfer();            
                  term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
                   term_write_lowlevel(i);
-                  term_end_transfer();
                   delay(1);  
                 }
                 // }                
