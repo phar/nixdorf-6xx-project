@@ -115,6 +115,7 @@ int f = 0;
 uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
+  dig
   if(Serial.available()){
     switch(Serial.read()){    
         case 'B':
@@ -159,7 +160,7 @@ uint8_t word_1 = 0;
             break;               
          case 'D':
           Serial.println("D");
-                                          //terminal connect to mainframe
+             term_end_transfer();                             //terminal connect to mainframe
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
                 for(int i=0;i<0xff;i++){
                 // if(isprint(i)){
