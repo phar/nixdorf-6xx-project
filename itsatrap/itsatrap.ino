@@ -209,10 +209,43 @@ uint8_t word_1 = 0;
                   term_end_transfer();
                   term_write_lowlevel(i);
                   term_begin_transfer();
+                  term_end_transfer();
+                  delay(1);  
+                }
+                delay(100);
+                for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_begin_transfer();
+                  term_end_transfer();
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                  term_begin_transfer();
+                  term_end_transfer();
+                  term_write_lowlevel(i);
+
                   delay(1);  
                 }
 
-              
+                delay(100);
+                for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_begin_transfer();
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                  term_end_transfer();
+                  term_write_lowlevel(i);
+                  delay(1);  
+                }                
+
+
+                delay(100);
+                 term_begin_transfer();
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                for(int i=0;i<0xff;i++){
+                // if(isprint(i)){
+                  term_write_lowlevel(i);
+                  delay(1);  
+                }        
+                  term_end_transfer();
+
               Serial.print("done.");
             delay(200);
             break;              
