@@ -275,10 +275,13 @@ uint8_t word_1 = 0;
             break;  
 
      case 'E': 
-
+/*
+when rts goes low, the codeword is locked in, when it goes high the byte is latched
+*/
             for(int i=0;i<0xff;i++){ 
               if(isprint(swapBitOrder(i))){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                  term_clock_rts();
                   delay(3);
                   term_write_lowlevel(swapBitOrder(i));
                   term_clock_rts();
