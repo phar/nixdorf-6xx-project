@@ -123,58 +123,6 @@ uint8_t word_1 = 0;
 
   if(Serial.available()){
     switch(Serial.read()){    
-     case 'E': 
-/*
-when rts goes low, the codeword is locked in, when it goes high the byte is latched
-// */
-//             for(int i=0;i<0xff;i++){ 
-//               if(isprint(swapBitOrder(i))){
-//                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-//                   term_clock_rts();
-//                   delay(3);
-//                   term_write_lowlevel(swapBitOrder(i));
-//                   term_clock_rts();
-//                   delay(3); 
-//               }
-//              }     
-
-            delay(100);
-            for(int i=0;i<0xff;i++){ 
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
-                  delay(3);
-                  term_write_lowlevel(i);
-                  term_clock_rts();
-                   delay(3); 
-              }
-             }             
-            delay(100);
-
-          //   for(int i=0;i<0xff;i++){ 
-          //     if(isprint(swapBitOrder(i))){
-          //        term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-          //         term_begin_transfer();
-          //         delay(3);
-          //         term_write_lowlevel(swapBitOrder(i));
-          //          delay(1); 
-          //         term_end_transfer();
-          //          delay(2); 
-  
-          //       }
-          //    }             
-
-
-          //  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-          //   delay(3);
-          //   for(int i=0;i<0xff;i++){ 
-          //     if(isprint(swapBitOrder(i))){
-          //         term_begin_transfer();
-          //         term_write_lowlevel(swapBitOrder(i));
-          //          term_end_transfer();
-          //          delay(1);   
-          //       }
-          //    }      
-            delay(100);
         case 'F':
           terminal_print(TERMINAL_ID, "hello world!\n");
 
@@ -239,10 +187,10 @@ int e;
 
   for(e=0;instr[e]!=0;e++){
     term_write_lowlevel(terminal_id|STATE_FLAG_1);   //terminal attention
-    delay(1);
+    delay(2);
     term_write_lowlevel(instr[e]);
     term_clock_rts();
-    delay(5);     
+    delay(2);     
   }
 }
 
