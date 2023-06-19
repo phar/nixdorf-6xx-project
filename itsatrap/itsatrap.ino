@@ -117,7 +117,7 @@ uint8_t word_1 = 0;
 
   if(Serial.available()){
     switch(Serial.read()){    
-        case 'B':
+        case 'B': //preserved just as a reference of "goodish" behaviour
           Serial.println("the bee movie wasnt that funny");
                                           //terminal connect to mainframe
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
@@ -137,31 +137,11 @@ uint8_t word_1 = 0;
             Serial.print("done.");
 
             break;   
-
-        case 'C':
-          Serial.println("C");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-              for(int e=0;e<8;e++){
-                for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                  term_begin_transfer();            
-                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-                  term_end_transfer();
-                  term_write_lowlevel(i);
-                  delay(1);  
-                }
-                // }                
-                delay(100);
-              }
-              Serial.print("done.");
-            delay(200);
-            break;               
+          
          case 'D':
           Serial.println("D");
             term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_begin_transfer();
                   term_write_lowlevel(i);
@@ -169,8 +149,8 @@ uint8_t word_1 = 0;
                   delay(1);  
                 }
                 delay(100);
+
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_write_lowlevel(i);
                   term_begin_transfer();
@@ -179,7 +159,6 @@ uint8_t word_1 = 0;
                 }
                 delay(100);
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_begin_transfer();
                   term_write_lowlevel(i);
@@ -190,7 +169,6 @@ uint8_t word_1 = 0;
                 }
                 delay(100);
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_begin_transfer();
                   term_end_transfer();
@@ -201,7 +179,6 @@ uint8_t word_1 = 0;
                 }
                 delay(100);
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                   term_begin_transfer();
                   term_end_transfer();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
@@ -214,7 +191,6 @@ uint8_t word_1 = 0;
                 }
                 delay(100);
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                   term_begin_transfer();
                   term_end_transfer();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
@@ -227,7 +203,6 @@ uint8_t word_1 = 0;
 
                 delay(100);
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                   term_begin_transfer();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   term_end_transfer();
@@ -240,7 +215,6 @@ uint8_t word_1 = 0;
                  term_begin_transfer();
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                 for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
                   term_write_lowlevel(i);
                   delay(1);  
                 }        
@@ -250,9 +224,27 @@ uint8_t word_1 = 0;
             delay(200);
             break;              
 
-             }
+            
 
-  }
+       case 'C': 
+          Serial.println("C");
+                                          //terminal connect to mainframe
+           term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
+            for(int i=0;i<0xff;i++){
+              if(isprint(i)){
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                  term_clock_rts();
+                  term_write_lowlevel(i);
+                    term_clock_rts();
+                   delay(1); 
+              }
+             }
+            delay(200);
+            Serial.print("done.");
+
+            break;  
+      }
+    }
 
   }
 
@@ -262,6 +254,7 @@ uint8_t word_1 = 0;
 void term_clock_rts(){
 
     digitalWrite(RTS_PIN, LOW); //logic positive logic verified.. idle state of the line is high
+    delayMicroseconds(5);
     digitalWrite(RTS_PIN, HIGH);
 }
 
