@@ -305,7 +305,7 @@ uint8_t word_1 = 0;
                   delay(3);
                   term_write_lowlevel(swapBitOrder(i));
                    delay(1); 
-                  term_end_transfer()
+                  term_end_transfer();
                    delay(2); 
   
                 }
@@ -321,8 +321,7 @@ uint8_t word_1 = 0;
                    delay(1);   
                 }
              }      
-             term_end_transfer()
-            delay(2); 
+             term_end_transfer();
             delay(100);
 
 
