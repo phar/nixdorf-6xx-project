@@ -227,7 +227,7 @@ uint8_t terminal_attention(uint8_t terminal_id){
 uint8_t term_write_lowlevel(uint8_t word_0){
 
   // return  mySPI.transfer16((0xfe<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
-  return  mySPI.transfer16((0x7f<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
+  return  mySPI.transfer16( (word_0 << 8) | 0x7f); //9 bit transfer hack seems to work ith the cards state machine without consequence
   delay(4);  //will need tightening
 }
 
