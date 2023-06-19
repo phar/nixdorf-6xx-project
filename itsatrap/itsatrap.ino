@@ -188,7 +188,7 @@ when rts goes low, the codeword is locked in, when it goes high the byte is latc
                    delay(4); 
               }
              }  
-            terminal_print("\n");            
+            terminal_print(TERMINAL_ID,"\n");            
             delay(100);
             for(int i=0;i<0xff;i++){ 
               if(isprint(i)){
