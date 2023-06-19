@@ -139,7 +139,7 @@ when rts goes low, the codeword is locked in, when it goes high the byte is latc
 
             delay(100);
             for(int i=0;i<0xff;i++){ 
-              if(isprint(swapBitOrder(i))){
+              if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(3);
                   term_write_lowlevel(i);
