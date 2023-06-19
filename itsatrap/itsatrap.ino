@@ -275,20 +275,20 @@ uint8_t word_1 = 0;
             break;  
 
      case 'E': 
-          Serial.println("E");
-            for(int i=0;i<0xff;i++){ //same as C with delay
-              if(isprint(i)){
+
+            for(int i=0;i<0xff;i++){ 
+              if(isprint(swapBitOrder(i))){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   delay(3);
-                  term_write_lowlevel(i);
+                  term_write_lowlevel(swapBitOrder(i));
                     term_clock_rts();
                    delay(3); 
               }
-             }             
-            delay(100);
+             }     
 
-            for(int i=0;i<0xff;i++){ //same as C with delay
-              if(isprint(i)){
+            delay(100);
+            for(int i=0;i<0xff;i++){ 
+              if(isprint(swapBitOrder(i))){
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   delay(3);
                   term_write_lowlevel(swapBitOrder(i));
@@ -297,6 +297,8 @@ uint8_t word_1 = 0;
               }
              }             
             delay(100);
+
+
       }
     }
 
