@@ -281,8 +281,8 @@ uint8_t word_1 = 0;
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   delay(3);
                   term_write_lowlevel(swapBitOrder(i));
-                    term_clock_rts();
-                   delay(3); 
+                  term_clock_rts();
+                  delay(3); 
               }
              }     
 
@@ -292,10 +292,37 @@ uint8_t word_1 = 0;
                  term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   delay(3);
                   term_write_lowlevel(swapBitOrder(i));
-                    term_clock_rts();
+                  term_clock_rts();
                    delay(3); 
               }
              }             
+            delay(100);
+
+            for(int i=0;i<0xff;i++){ 
+              if(isprint(swapBitOrder(i))){
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                  term_begin_transfer();
+                  delay(3);
+                  term_write_lowlevel(swapBitOrder(i));
+                   delay(1); 
+                  term_end_transfer()
+                   delay(2); 
+  
+                }
+             }             
+
+
+           term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+           term_begin_transfer();
+            delay(3);
+            for(int i=0;i<0xff;i++){ 
+              if(isprint(swapBitOrder(i))){
+                  term_write_lowlevel(swapBitOrder(i));
+                   delay(1);   
+                }
+             }      
+             term_end_transfer()
+            delay(2); 
             delay(100);
 
 
