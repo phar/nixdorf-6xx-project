@@ -286,19 +286,17 @@ uint8_t word_1 = 0;
               }
              }             
             delay(100);
-
-            term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-            term_clock_rts();
-            for(int i=0;i<0xff;i++){
+            
+            for(int i=0;i<0xff;i++){ //same as C with delay
               if(isprint(i)){
+                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
                   delay(3);
-                  term_write_lowlevel(i);
+                  term_write_lowlevel(swapBitOrder(i));
                     term_clock_rts();
                    delay(3); 
               }
-             }
-
-            break;  
+             }             
+            delay(100);
       }
     }
 
