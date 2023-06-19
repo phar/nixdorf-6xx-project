@@ -180,24 +180,24 @@ when rts goes low, the codeword is locked in, when it goes high the byte is latc
 
             delay(100);
             for(int i=0;i<0xff;i++){ 
-              // if(isprint(i)){
+              if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(2);
                   term_write_lowlevel(i);
                   term_clock_rts();
                    delay(4); 
-              // }
+              }
              }  
-
+            terminal_print("\n");            
             delay(100);
             for(int i=0;i<0xff;i++){ 
-              // if(isprint(i)){
+              if(isprint(i)){
                  term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(1);
                   term_write_lowlevel(i);
                   term_clock_rts();
                    delay(5); 
-              // }
+              }
              }  
       }
     }
@@ -228,6 +228,11 @@ void term_sync_bitcounter(){
     mySPI.transfer(0xff);
 }
 
+
+void terminal_println(uint8_t terminal_id, char * instr){
+  terminal_print(terminal_id, instr);
+  terminal_print(terminal_id, "\n");
+}
 
 void terminal_print(uint8_t terminal_id, char * instr){
 int e;
