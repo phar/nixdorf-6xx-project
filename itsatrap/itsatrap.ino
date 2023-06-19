@@ -52,6 +52,7 @@ about the protocol state machine yet, it might work similar to JTAG)
 // void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 uint8_t term_write_lowlevel(uint8_t word_0);
 
+void terminal_print(uint8_t terminal_id, char * str);
 void term_begin_transfer();
 void term_end_transfer();
 void term_sync_bitcounter();
@@ -175,7 +176,7 @@ when rts goes low, the codeword is locked in, when it goes high the byte is latc
           //    }      
             delay(100);
         case 'F':
-          terminal_print("hello world!\n");
+          terminal_print(TERMINAL_ID, "hello world!\n");
 
             delay(100);
             for(int i=0;i<0xff;i++){ 
@@ -228,12 +229,13 @@ void term_sync_bitcounter(){
 }
 
 
-void terminal_print(uint8_t terminal_id, char * str){
+void terminal_print(uint8_t terminal_id, char * instr){
+int e;
 
-  for(e=0;str[e]!=0;e++){
+  for(e=0;instr[e]!=0;e++){
     term_write_lowlevel(terminal_id|STATE_FLAG_1);   //terminal attention
     delay(1);
-    term_write_lowlevel(i);
+    term_write_lowlevel(instr[e]);
     term_clock_rts();
     delay(5);     
   }
