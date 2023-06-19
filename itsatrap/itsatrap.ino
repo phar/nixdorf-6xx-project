@@ -90,19 +90,24 @@ void setup() {
   Serial.begin(9600);
   mySPI.begin();
 
-  // mySPI.beginTransaction(SPISettings(BIT_SPEED, MSBFIRST, SPI_MODE2));
+  // mySPI.beginTransaction(SPISettings(BIT_SPEED, LSBFIRST, SPI_MODE2));
   mySPI.begin();
   // mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
   mySPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
-  mySPI.setBitOrder(MSBFIRST);
+  mySPI.setBitOrder(LSBFIRST);
   mySPI.setDataMode(SPI_MODE2);
   pinMode(RTS_PIN,OUTPUT);
   pinMode(CTS_PIN, INPUT_PULLUP);
 }
 
-#define STATE_FLAG_0 0x01
-#define STATE_FLAG_1 0x02 
-#define STATE_FLAG_2 0x04   //targets UF7A
+// #define STATE_FLAG_0 0x01
+// #define STATE_FLAG_1 0x02 
+// #define STATE_FLAG_2 0x04   //targets UF7A
+
+#define STATE_FLAG_0 0x80
+#define STATE_FLAG_1 0x40 
+#define STATE_FLAG_2 0x20   //targets UF7A
+
 
 #define TERMINAL_ID 0x0a 
 
@@ -117,163 +122,6 @@ uint8_t word_1 = 0;
 
   if(Serial.available()){
     switch(Serial.read()){    
-        case 'B': //preserved just as a reference of "goodish" behaviour
-          Serial.println("the bee movie wasnt that funny");
-                                          //terminal connect to mainframe
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-              for(int e=0;e<8;e++){
-                for(int i=0;i<0xff;i++){
-                // if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|e);   //terminal attention
-                  term_begin_transfer();            
-                  term_write_lowlevel(i);
-                  term_end_transfer();
-                  delay(1); 
-                }
-                // }                
-                delay(100);
-              }
-            delay(200);
-            Serial.print("done.");
-
-            break;   
-          
-         case 'D':
-          Serial.println("D");
-            term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-                for(int i=0;i<0xff;i++){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_begin_transfer();
-                  term_write_lowlevel(i);
-                  term_end_transfer();
-                  delay(1);  
-                }
-                delay(100);
-
-                for(int i=0;i<0xff;i++){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_write_lowlevel(i);
-                  term_begin_transfer();
-                  term_end_transfer();
-                  delay(1);  
-                }
-                delay(100);
-                for(int i=0;i<0xff;i++){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_begin_transfer();
-                  term_write_lowlevel(i);
-                  term_end_transfer();
-                  term_begin_transfer();
-                  term_end_transfer();
-                  delay(1);  
-                }
-                delay(100);
-                for(int i=0;i<0xff;i++){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_begin_transfer();
-                  term_end_transfer();
-                  term_write_lowlevel(i);
-                  term_begin_transfer();
-                  term_end_transfer();
-                  delay(1);  
-                }
-                delay(100);
-                for(int i=0;i<0xff;i++){
-                  term_begin_transfer();
-                  term_end_transfer();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_begin_transfer();
-                  term_end_transfer();
-                  term_write_lowlevel(i);
-                  term_begin_transfer();
-                  term_end_transfer();
-                  delay(1);  
-                }
-                delay(100);
-                for(int i=0;i<0xff;i++){
-                  term_begin_transfer();
-                  term_end_transfer();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_begin_transfer();
-                  term_end_transfer();
-                  term_write_lowlevel(i);
-
-                  delay(1);  
-                }
-
-                delay(100);
-                for(int i=0;i<0xff;i++){
-                  term_begin_transfer();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_end_transfer();
-                  term_write_lowlevel(i);
-                  delay(1);  
-                }                
-
-
-                delay(100);
-                 term_begin_transfer();
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                for(int i=0;i<0xff;i++){
-                  term_write_lowlevel(i);
-                  delay(1);  
-                }        
-                  term_end_transfer();
-
-              Serial.print("done.");
-            delay(200);
-            break;              
-
-            
-
-       case 'C': 
-          Serial.println("C");
-                                          //terminal connect to mainframe
-           term_sync_bitcounter();       // sync bit counter to ensure we are word aligned
-            for(int i=0;i<0xff;i++){
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_clock_rts();
-                  term_write_lowlevel(i);
-                    term_clock_rts();
-                   delay(1); 
-              }
-             }
-            delay(100);
-            for(int i=0;i<0xff;i++){
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_write_lowlevel(i);
-                    term_clock_rts();
-                   delay(1); 
-              }
-             }
-            delay(100);
-            for(int i=0;i<0xff;i++){
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  term_clock_rts();
-                  delay(1);
-                  term_write_lowlevel(i);
-                    term_clock_rts();
-                   delay(1); 
-              }
-             }
-            delay(100);
-            for(int i=0;i<0xff;i++){
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
-                  delay(1);
-                  term_write_lowlevel(i);
-                    term_clock_rts();
-                   delay(1); 
-              }
-             }             
-            delay(200);
-            Serial.print("done.");
-
-            break;  
-
      case 'E': 
 /*
 when rts goes low, the codeword is locked in, when it goes high the byte is latched
@@ -292,9 +140,9 @@ when rts goes low, the codeword is locked in, when it goes high the byte is latc
             delay(100);
             for(int i=0;i<0xff;i++){ 
               if(isprint(swapBitOrder(i))){
-                 term_write_lowlevel(TERMINAL_ID<<3|STATE_FLAG_1);   //terminal attention
+                 term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(3);
-                  term_write_lowlevel(swapBitOrder(i));
+                  term_write_lowlevel(i);
                   term_clock_rts();
                    delay(3); 
               }
@@ -378,7 +226,8 @@ uint8_t terminal_attention(uint8_t terminal_id){
 
 uint8_t term_write_lowlevel(uint8_t word_0){
 
-  return  mySPI.transfer16((0xfe<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
+  // return  mySPI.transfer16((0xfe<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
+  return  mySPI.transfer16((0x7f<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
   delay(4);  //will need tightening
 }
 
