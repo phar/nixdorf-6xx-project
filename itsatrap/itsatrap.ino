@@ -67,23 +67,22 @@ const int CLOCK_PIN = 4;
 const int BIT_SPEED = 2000;
 
 
+// #define MAGIC_CHARACTER  0xA5
+// #define CRLF_CHARACTER  0xA8
 
-#define BIT_SPEED 2000
+// #define CRLF_CHARACTER  0xA9  //out 0x04 to port 50
+// #define CRLF_CHARACTER  0xA7  //out 0x01 to port 50
+// #define CRLF_CHARACTER  0xA2
+// #define CRLF_CHARACTER  0xA0
+// #define CRLF_CHARACTER  0xA3
+// #define CRLF_CHARACTER  0xA4  //call mask display (clear screen?)
 
-uint8_t swapBitOrder(uint8_t byte) {
-    uint8_t result = 0;
-    int i;
+// #define WHITESPACE2_CHARACTER  0xB6
+// #define WHITESPACE3_CHARACTER  0xB8
+// #define VERTICAL_TAB_CHARACTER 0x0B
+// #define BACKSPACE_CHARACTER    0x08
+// #define LINEFEED_CHARACTER    0x0a
 
-    for (i = 0; i < 8; i++) {
-        if ((byte & (1 << i)) != 0) {
-            result |= (1 << (7 - i));
-        }
-    }
-
-    return result;
-}
-
-// SoftSPI mySPI(MISO_PIN,MOSI_PIN,SCK_PIN);
 #define mySPI SPI
 
 void setup() {
@@ -91,9 +90,7 @@ void setup() {
   Serial.begin(9600);
   mySPI.begin();
 
-  // mySPI.beginTransaction(SPISettings(BIT_SPEED, LSBFIRST, SPI_MODE2));
   mySPI.begin();
-  // mySPI.setClockDivider(SPI_CLOCK_DIV64); //slow things down if needed
   mySPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
   mySPI.setBitOrder(LSBFIRST);
   mySPI.setDataMode(SPI_MODE2);
@@ -146,7 +143,19 @@ uint8_t word_1 = 0;
                   term_clock_rts();
                    delay(5); 
               }
-             }  
+           }  
+          break;
+      case 'G':
+        terminal_print(TERMINAL_ID, "hello world!\n");
+        terminal_print(TERMINAL_ID, "hello world!\n");
+        for(int i=0;i<10;i++){
+          terminal_print(TERMINAL_ID, "\xa9");
+          delay(500);
+          terminal_print(TERMINAL_ID, "\xa7");
+          delay(500);
+        }
+        break;
+          
       }
     }
 
@@ -187,10 +196,10 @@ int e;
 
   for(e=0;instr[e]!=0;e++){
     term_write_lowlevel(terminal_id|STATE_FLAG_1);   //terminal attention
-    delay(2);
+    delay(1);
     term_write_lowlevel(instr[e]);
     term_clock_rts();
-    delay(2);     
+    delay(1);     
   }
 }
 
@@ -221,6 +230,4 @@ uint8_t term_write_lowlevel(uint8_t word_0){
 
 
 uint16_t term_read_lowlevel(uint8_t termid, uint8_t cmd){
-
-
 }

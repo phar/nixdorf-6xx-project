@@ -373,7 +373,8 @@ handle_VT_01A5:
 	SHLD	char_buff_ptr			;store incremented var
 	
 	XRA	A
-	STA	var_cursor_line_FF11
+	STA	var_cursor_line_FF11		;zero the cursor position
+	
 	JMP	return_from_int_subroutine			;return
 
 ;**************************************************************************************************
@@ -697,7 +698,7 @@ int_5_handler: ;what i think happens here is that we got an interrupt from an ad
 	CPI	0xA5				;is magic character 0xa5?
 	JZ	label_03B4			;stores the next byte & 0x3f into magic memory address var_FF0B
 	
-	ANI	0xC0				;is in group of 0xC? character?
+	ANI	0xC0				;high bits set (non printable??)
 	CPI	0xC0
 	JZ	label_03CA			;looks like these are some kind of formatting code
 	
@@ -730,7 +731,7 @@ label_03B4:
 	IN	0x78               ;read interface card status
 	RAR
 	CNC	inc_and_store_error_counter
-	JNC	label_03B4
+	JNC	label_03
 
 	CALL	RST_3							;clear error  counter
 	
@@ -749,8 +750,9 @@ label_03CA:
 	IN	0x68                    ;read interface card buffer
 	ANI	0x7F
 	STA	var_FF0A
+	
 	XRA	A
-	STA	var_cursor_line_FF11
+	STA	var_cursor_line_FF11				; zero the cursor position
 	JMP	ie_and_return_from_int_subroutine
 
 ;**************************************************************************************************
@@ -950,6 +952,7 @@ label_04BE:
 a9_handler:
 	MVI	A,0x04
 	OUT	0x50
+	
 	JMP	cycle_var_FFFA
 
 ;**************************************************************************************************
@@ -958,6 +961,7 @@ a9_handler:
 a7_handler:
 	MVI	A,0x01
 	OUT	0x50
+	
 	JMP	cycle_var_FFFA
 
 ;**************************************************************************************************
