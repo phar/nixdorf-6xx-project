@@ -1,7 +1,7 @@
 /*
 
 BSYNC:  pin 7
-CTS:    pin 6
+BDIR:    pin 6
 
 MOSI: pin 51
 MISO: pin 50
@@ -23,14 +23,12 @@ A         |-                |           |
 5         |-      |          -----------                        CLK
 6         |-       \------------------------------------------>J
 0         |-                          
-         6|-o<------------------------------------------------<C CTS (positive logic pin only)              
+         6|-o<------------------------------------------------<C BDIR (positive logic pin only)              
       MISO|-o<------------------------------------------------<B RX  (positive logic pin only)          
  */
 
 #include <SPI.h>
-// #include <SoftSPI.h>
 
-// void term_write_lowlevel(uint8_t word_0,uint8_t word_1);
 uint8_t term_write_lowlevel(uint8_t word_0);
 
 void terminal_print(uint8_t terminal_id, char * str);
@@ -40,7 +38,7 @@ void sync_bitcounter();
 #define  MOSI_PIN  2
 #define  MISO_PIN  5 
 #define  SCK_PIN  4
-#define  CTS_PIN  6
+#define  BDIR_PIN  6
 #define  BSYNC_PIN  7
 #define  CLOCK_PIN  4
 #define  BIT_SPEED  2000
@@ -67,26 +65,27 @@ void sync_bitcounter();
 void setup() {
 
   Serial.begin(9600);
-  mySPI.begin();
+  SPI.begin();
 
-  mySPI.begin();
-  mySPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
-  mySPI.setBitOrder(LSBFIRST);
-  mySPI.setDataMode(SPI_MODE2);
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
+  SPI.setBitOrder(LSBFIRST);
+  SPI.setDataMode(SPI_MODE2);
   pinMode(BSYNC_PIN,OUTPUT);
-  pinMode(CTS_PIN, INPUT_PULLUP);
+  pinMode(BDIR_PIN, INPUT_PULLUP);
 }
 
-// #define STATE_FLAG_0 0x01
-// #define STATE_FLAG_1 0x02 
-// #define STATE_FLAG_2 0x04   //targets UF7A
 
 #define STATE_FLAG_0 0x80
-#define STATE_FLAG_1 0x40 
+#define S_CHAR_TO_TERM 0x40 
 #define STATE_FLAG_2 0x20   //targets UF7A
 
 
-#define TERMINAL_ID 0x0a 
+#define TERMINAL_ID 0x0a
+#define COMMAND_MODE  0
+#define ECHO_MODE     1
+
+int MODE = COMMAND_MODE;
 
 void loop() {
 int t;
@@ -96,55 +95,67 @@ uint8_t word_0 = 0;
 uint8_t word_1 = 0;
 
   if(Serial.available()){
-    switch(Serial.read()){    
-        case 'F':
-          terminal_print(TERMINAL_ID, "hello world!\n");
+    if(MODE == COMMAND_MODE){
+      switch(Serial.read()){ 
+          case 'E':
+            Serial.print("echo mode enabled. reboot to re-enter command mode\n");
+            MODE = ECHO_MODE;
+            break;
 
-            delay(100);
-            for(int i=0;i<0xff;i++){ 
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
-                  delay(2);
-                  term_write_lowlevel(i);
-                  term_bsync();
-                   delay(4); 
-              }
-             }  
-            terminal_print(TERMINAL_ID,"\n");            
-            delay(100);
-            for(int i=0;i<0xff;i++){ 
-              if(isprint(i)){
-                 term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
-                  delay(1);
-                  term_write_lowlevel(i);
-                  term_bsync();
-                   delay(5); 
-              }
-           }  
+          case 'F':
+            terminal_print(TERMINAL_ID, "hello world!\n");
+
+              delay(100);
+              for(int i=0;i<0xff;i++){ 
+                if(isprint(i)){
+                  terminal_attention(TERMINAL_ID, S_CHAR_TO_TERM);
+                    delay(2);
+                    term_write_lowlevel(i);
+                    term_bsync();
+                    delay(4); 
+                }
+              }  
+              terminal_print(TERMINAL_ID,"\n");            
+              delay(100);
+              for(int i=0;i<0xff;i++){ 
+                if(isprint(i)){
+                    terminal_attention(TERMINAL_ID, S_CHAR_TO_TERM);
+                    delay(1);
+                    term_write_lowlevel(i);
+                    term_bsync();
+                    delay(5); 
+                }
+            }  
+            break;
+            
+        case 'G':
+          terminal_print(TERMINAL_ID, "hello world!\r\n");
+          terminal_print(TERMINAL_ID, "hello world!\n");
+          for(int i=0;i<10;i++){
+            terminal_print(TERMINAL_ID, "\xa7");
+            delay(500);
+          }
           break;
           
-      case 'G':
-        terminal_print(TERMINAL_ID, "hello world!\r\n");
-        terminal_print(TERMINAL_ID, "hello world!\n");
-        for(int i=0;i<10;i++){
-          terminal_print(TERMINAL_ID, "\xa7");
-          delay(500);
-        }
-        break;
-        
-      case 'H':
-        terminal_print(TERMINAL_ID, "hello world!\n");
-        terminal_print(TERMINAL_ID, "hello world!\xA8");
-        terminal_print(TERMINAL_ID, "hello world!\n");
-        
-        for(int i=0;i<10;i++){
-          terminal_print(TERMINAL_ID, "\xa9");
-          delay(500);
-        }
-        break;        
+        case 'H':
+          terminal_print(TERMINAL_ID, "hello world!\r\n");
+          terminal_print(TERMINAL_ID, "hello world!\xA8");
+          terminal_print(TERMINAL_ID, "hello world!\n");
           
+          for(int i=0;i<10;i++){
+            terminal_print(TERMINAL_ID, "\xa9");
+            delay(500);
+          }
+          break;        
+            
+        }
       }
-    }
+  }else if(MODE == ECHO_MODE){
+    char c = Serial.read();
+    terminal_send(TERMINAL_ID, &c, 1);
+  }
+
+
 
   }
 
@@ -152,7 +163,6 @@ uint8_t word_1 = 0;
 
 
 void term_bsync(){
-
     digitalWrite(BSYNC_PIN, LOW); //logic positive logic verified.. idle state of the line is high
     delayMicroseconds(5);
     digitalWrite(BSYNC_PIN, HIGH);
@@ -160,8 +170,8 @@ void term_bsync(){
 
 
 void sync_bitcounter(){
-    mySPI.transfer(0xff);
-    mySPI.transfer(0xff);
+    SPI.transfer(0xff);
+    SPI.transfer(0xff);
 }
 
 
@@ -173,41 +183,48 @@ void terminal_println(uint8_t terminal_id, char * instr){
 void terminal_print(uint8_t terminal_id, char * instr){
 int e;
 
-  for(e=0;instr[e]!=0;e++){
-    term_write_lowlevel(terminal_id|STATE_FLAG_1);   //terminal attention
-    delay(1);
-    switch(instr[e]){}
-      term_write_lowlevel(  ;
-      break;
+  terminal_send(terminal_id, instr, strlen(instr));
+}
 
-    default:
-      term_write_lowlevel(instr[e]);
+void terminal_send(uint8_t terminal_id, char * buff, uint16_t bufflen){
+int e;
+
+  for(e=0;bufflen;e++){
+    terminal_attention(terminal_id, S_CHAR_TO_TERM);
+    delay(1);
+    term_write_lowlevel(buff[e]);
     term_bsync();
-    delay(1);     
+    delay(1);    //might be able to yank this out 
   }
 }
 
 
-// uint8_t terminal_attention(uint8_t terminal_id){
-//   int i;
 
-//   if(digitalRead(CTS_PIN)) //rts is already high hack in case its needed
-//     return true;
+bool terminal_attention(uint8_t terminal_id, uint8_t command){
 
-//   term_write_lowlevel((TERMINAL_ID<<3));   //terminal attention
-//   for(i=0;i<100;i++){
-//     delay(2);
-//     if(digitalRead(CTS_PIN)){
-//       return true;
-//     }
-//   }  
-//   return false;
-// }
+   term_write_lowlevel(terminal_id|command);
+
+//fixme, everuthing after tthis is wacky, and im not sure how ot treat recv yet
+
+  if(command & STATE_FLAG_0){ 
+
+  }
+
+  if(command & S_CHAR_TO_TERM){
+
+    return true;
+  }
+  
+  if(command & STATE_FLAG_2){
+ 
+  }
+
+
+}
 
 uint8_t term_write_lowlevel(uint8_t word_0){
 
-  // return  mySPI.transfer16((0xfe<<8) | word_0); //9 bit transfer hack seems to work ith the cards state machine without consequence
-  return  mySPI.transfer16( (word_0 << 8) | 0x7f); //9 bit transfer hack seems to work ith the cards state machine without consequence
+  return  SPI.transfer16( (word_0 << 8) | 0x7f); //9 bit transfer hack seems to work ith the cards state machine without consequence
   delay(4);  //will need tightening
 }
 
