@@ -1,16 +1,7 @@
 /*
 
-//Arduino Mega SPI pins: 50 (MISO), 51 (MOSI), 52 (SCK), 53 (SS).
-
-
-  // SPI_MODE0: Clock idle low (CPOL = 0), data sampled on leading edge (CPHA = 0)
-  // SPI_MODE1: Clock idle low (CPOL = 0), data sampled on trailing edge (CPHA = 1)
-  // SPI_MODE2: Clock idle high (CPOL = 1), data sampled on leading edge (CPHA = 0)
-  // SPI_MODE3: Clock idle high (CPOL = 1), data sampled on trailing edge (CPHA = 1)
-  
-
-RTS:  pin 7
-CTS: pin 6
+BSYNC:  pin 7
+CTS:    pin 6
 
 MOSI: pin 51
 MISO: pin 50
@@ -25,7 +16,7 @@ __________         |         ___________                         TX
       MOSI|-o>-----+----->o-|1  ('04)  2|-o>------------------>H 
           |                 |           |      
 M        7|-o>----+------>o-|3         4|-o>------------------>R 
-E         |-      |         |           |                       RTS    TERMINAL
+E         |-      |         |           |                       BSYNC    TERMINAL
 G         |-       \------------------------------------------>N         
 A         |-                |           |
 2      SCK|-o>----+------>o-|5         7|-o>------------------>P
@@ -34,16 +25,6 @@ A         |-                |           |
 0         |-                          
          6|-o<------------------------------------------------<C CTS (positive logic pin only)              
       MISO|-o<------------------------------------------------<B RX  (positive logic pin only)          
-
-
-just a thought, that might be wrong, but you may need to connect the arduino
-to the terminal before powering on the terminal because the bitcounter
-is connected directly to the clock lines, and powering or connecting 
-or toggling some weird pins state may increment the bit counter and
-im not sure theres any way to recover (without some trickery we dont know
-about the protocol state machine yet, it might work similar to JTAG)
-)
-
  */
 
 #include <SPI.h>
@@ -53,35 +34,33 @@ about the protocol state machine yet, it might work similar to JTAG)
 uint8_t term_write_lowlevel(uint8_t word_0);
 
 void terminal_print(uint8_t terminal_id, char * str);
-void term_begin_transfer();
-void term_end_transfer();
-void term_sync_bitcounter();
+void sync_bitcounter();
 
 
-const int MOSI_PIN = 2; 
-const int MISO_PIN = 5; 
-const int SCK_PIN = 4;
-const int CTS_PIN = 6;
-const int RTS_PIN = 7;
-const int CLOCK_PIN = 4;
-const int BIT_SPEED = 2000;
+#define  MOSI_PIN  2
+#define  MISO_PIN  5 
+#define  SCK_PIN  4
+#define  CTS_PIN  6
+#define  BSYNC_PIN  7
+#define  CLOCK_PIN  4
+#define  BIT_SPEED  2000
 
 
-// #define MAGIC_CHARACTER  0xA5
-// #define CRLF_CHARACTER  0xA8
+#define MAGIC_CHARACTER  0xA5
+#define CRLF_CHARACTER  0xA8
 
-// #define CRLF_CHARACTER  0xA9  //out 0x04 to port 50
-// #define CRLF_CHARACTER  0xA7  //out 0x01 to port 50
+#define BEEP_CHARACTER  0xA9  //out 0x04 to port 50
+#define LED_CHARACTER  0xA7  //out 0x01 to port 50
 // #define CRLF_CHARACTER  0xA2
 // #define CRLF_CHARACTER  0xA0
 // #define CRLF_CHARACTER  0xA3
 // #define CRLF_CHARACTER  0xA4  //call mask display (clear screen?)
 
-// #define WHITESPACE2_CHARACTER  0xB6
-// #define WHITESPACE3_CHARACTER  0xB8
-// #define VERTICAL_TAB_CHARACTER 0x0B
-// #define BACKSPACE_CHARACTER    0x08
-// #define LINEFEED_CHARACTER    0x0a
+#define WHITESPACE2_CHARACTER  0xB6
+#define WHITESPACE3_CHARACTER  0xB8
+#define VERTICAL_TAB_CHARACTER 0x0B
+#define BACKSPACE_CHARACTER    0x08
+#define LINEFEED_CHARACTER    0x0a
 
 #define mySPI SPI
 
@@ -94,7 +73,7 @@ void setup() {
   mySPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
   mySPI.setBitOrder(LSBFIRST);
   mySPI.setDataMode(SPI_MODE2);
-  pinMode(RTS_PIN,OUTPUT);
+  pinMode(BSYNC_PIN,OUTPUT);
   pinMode(CTS_PIN, INPUT_PULLUP);
 }
 
@@ -108,8 +87,6 @@ void setup() {
 
 
 #define TERMINAL_ID 0x0a 
-
-int goflag = false;
 
 void loop() {
 int t;
@@ -129,7 +106,7 @@ uint8_t word_1 = 0;
                  term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(2);
                   term_write_lowlevel(i);
-                  term_clock_rts();
+                  term_bsync();
                    delay(4); 
               }
              }  
@@ -140,21 +117,31 @@ uint8_t word_1 = 0;
                  term_write_lowlevel(TERMINAL_ID|STATE_FLAG_1);   //terminal attention
                   delay(1);
                   term_write_lowlevel(i);
-                  term_clock_rts();
+                  term_bsync();
                    delay(5); 
               }
            }  
           break;
+          
       case 'G':
-        terminal_print(TERMINAL_ID, "hello world!\n");
+        terminal_print(TERMINAL_ID, "hello world!\r\n");
         terminal_print(TERMINAL_ID, "hello world!\n");
         for(int i=0;i<10;i++){
-          terminal_print(TERMINAL_ID, "\xa9");
-          delay(500);
           terminal_print(TERMINAL_ID, "\xa7");
           delay(500);
         }
         break;
+        
+      case 'H':
+        terminal_print(TERMINAL_ID, "hello world!\n");
+        terminal_print(TERMINAL_ID, "hello world!\xA8");
+        terminal_print(TERMINAL_ID, "hello world!\n");
+        
+        for(int i=0;i<10;i++){
+          terminal_print(TERMINAL_ID, "\xa9");
+          delay(500);
+        }
+        break;        
           
       }
     }
@@ -164,23 +151,15 @@ uint8_t word_1 = 0;
 
 
 
-void term_clock_rts(){
+void term_bsync(){
 
-    digitalWrite(RTS_PIN, LOW); //logic positive logic verified.. idle state of the line is high
+    digitalWrite(BSYNC_PIN, LOW); //logic positive logic verified.. idle state of the line is high
     delayMicroseconds(5);
-    digitalWrite(RTS_PIN, HIGH);
-}
-
-void term_begin_transfer(){
-    digitalWrite(RTS_PIN, LOW);
-}
-
-void term_end_transfer(){
-    digitalWrite(RTS_PIN, HIGH);
+    digitalWrite(BSYNC_PIN, HIGH);
 }
 
 
-void term_sync_bitcounter(){
+void sync_bitcounter(){
     mySPI.transfer(0xff);
     mySPI.transfer(0xff);
 }
@@ -197,29 +176,33 @@ int e;
   for(e=0;instr[e]!=0;e++){
     term_write_lowlevel(terminal_id|STATE_FLAG_1);   //terminal attention
     delay(1);
-    term_write_lowlevel(instr[e]);
-    term_clock_rts();
+    switch(instr[e]){}
+      term_write_lowlevel(  ;
+      break;
+
+    default:
+      term_write_lowlevel(instr[e]);
+    term_bsync();
     delay(1);     
   }
 }
 
 
-uint8_t terminal_attention(uint8_t terminal_id){
-  int i;
+// uint8_t terminal_attention(uint8_t terminal_id){
+//   int i;
 
+//   if(digitalRead(CTS_PIN)) //rts is already high hack in case its needed
+//     return true;
 
-  if(digitalRead(CTS_PIN)) //rts is already high hack in case its needed
-    return true;
-
-  term_write_lowlevel((TERMINAL_ID<<3));   //terminal attention
-  for(i=0;i<100;i++){
-    delay(2);
-    if(digitalRead(CTS_PIN)){
-      return true;
-    }
-  }  
-  return false;
-}
+//   term_write_lowlevel((TERMINAL_ID<<3));   //terminal attention
+//   for(i=0;i<100;i++){
+//     delay(2);
+//     if(digitalRead(CTS_PIN)){
+//       return true;
+//     }
+//   }  
+//   return false;
+// }
 
 uint8_t term_write_lowlevel(uint8_t word_0){
 
