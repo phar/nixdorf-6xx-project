@@ -77,7 +77,6 @@ typedef struct terminal_t{
   fifo_t    fifo_i;
 }terminal_t;
 
-uint8_t TERMINAL_COUNT = 0;
 struct terminal_t TERMINAL_FIFOS[MAX_TERMINALS];
 
 #define STATE_FLAG_0 0x80
@@ -91,30 +90,38 @@ struct terminal_t TERMINAL_FIFOS[MAX_TERMINALS];
 
 int MODE = COMMAND_MODE;
 
-uint8_t new_terminal(uint8_t terminal_id){
-uint8_t newidx = 0;
+int8_t new_terminal(uint8_t terminal_id){
+uint8_t newidx = 0,i;
 
+  for(i=0;i<MAX_TERMINALS;i++){               //find an unused terminal slot
+    if(TERMINAL_FIFOS[i].inuse == false){
+      TERMINAL_FIFOS[i].inuse = true;
+      TERMINAL_FIFOS[i].termid = terminal_id;
+      return i;
+    }
+  }
 
-  memset(&TERMINAL_FIFOS[TERMINAL_COUNT],0,sizeof(terminal_t));
-  
-  TERMINAL_FIFOS[TERMINAL_COUNT].inuse = true;
-  TERMINAL_FIFOS[TERMINAL_COUNT].termid = terminal_id;
-
-  newidx = TERMINAL_COUNT;
-  TERMINAL_COUNT++;
-  return newidx;
+  for(i=0;i<MAX_TERMINALS;i++){             //if there isnt an unused terminal slot, find a disused one
+    if((TERMINAL_FIFOS[i].fifo_i.fifotail == TERMINAL_FIFOS[i].fifo_i.fifohead) &&
+    (TERMINAL_FIFOS[i].fifo_o.fifotail == TERMINAL_FIFOS[i].fifo_o.fifohead)){
+      TERMINAL_FIFOS[i].inuse = true;
+      TERMINAL_FIFOS[i].termid = terminal_id;
+      return i;
+    }
+  }
+  return -1;
 }
 
 int8_t get_idx_from_termid(uint8_t terminal_id){
 uint8_t i;
 
 
- for ( i = 0; i < TERMINAL_COUNT; i++) {
+ for ( i = 0; i < MAX_TERMINALS; i++) {
    if((TERMINAL_FIFOS[i].termid == terminal_id)){
      return i;
    }
  }
-    return -1; //fixme
+  return -1; //fixme
 }  
 
 
@@ -122,21 +129,14 @@ uint8_t i;
 void setup() {
 
   Serial.begin(115200);
-  SPI.begin();
 
-  SPI.begin();
-  SPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
-  SPI.setBitOrder(LSBFIRST);
-  SPI.setDataMode(SPI_MODE2);
-  pinMode(BSYNC_PIN,OUTPUT);
-  pinMode(BDIR_PIN, INPUT_PULLUP);
 
-  new_terminal(TERMINAL_ID);
+  memset(&TERMINAL_FIFOS,0,sizeof(TERMINAL_FIFOS));
+
+  term_init();
+
   Serial.println("boot");
 
-  sync_bitcounter();
-  term_bsync();
-  // Serial.write(appendBufferToFifo((fifo_t *)&TERMINAL_FIFOS[0].fifo_o,"Hello World!", 13));
 }
 
 
@@ -146,7 +146,7 @@ void service_update(){
 int i;
 static int last_termal_poll_time = 0;
 
-  for ( i = 0; i < TERMINAL_COUNT; i++) {
+  for ( i = 0; i < MAX_TERMINALS; i++) {
     // terminal_t *terminal = &TERMINAL_FIFOS[i];
 
     if (TERMINAL_FIFOS[i].inuse && TERMINAL_FIFOS[i].fifo_o.fifotail != TERMINAL_FIFOS[i].fifo_o.fifohead) {
@@ -157,7 +157,7 @@ static int last_termal_poll_time = 0;
   }
   
   if(last_termal_poll_time < (millis() + 200)){
-     for ( i = 0; i < TERMINAL_COUNT; i++) {
+     for ( i = 0; i < MAX_TERMINALS; i++) {
        int c;
         //fixmepoll the terminal for data
         // if(poll_terminal){
@@ -174,7 +174,7 @@ unsigned long s;
 int f = 0;
 uint8_t word_0 = 0;
 uint8_t word_1 = 0;
-char readbuff[255];
+char readbuff[FIFO_SIZE];
 uint8_t c;
 uint8_t id;
 uint8_t i;
@@ -182,35 +182,47 @@ uint8_t blen;
 
   if(Serial.available()){
       switch(Serial.read()){ 
+          case 't': //define termid
+            while (!Serial.available());
+            id = Serial.read();
+            c = new_terminal(id);
+            if(c == -1){
+              Serial.write(0);  //fail
+            }else{
+              Serial.write(1);  //success
+            }
+            break;
+
           case 's': //send (pc send to terminal)
             while (!Serial.available());
             id = get_idx_from_termid(Serial.read());
               while (!Serial.available());
               blen = Serial.read();
-              if (id != -1 && blen <= (FIFO_SIZE - TERMINAL_FIFOS[id].fifo_o.fifohead + TERMINAL_FIFOS[id].fifo_o.fifotail) % FIFO_SIZE){ 
-                Serial.write(0x01); //continue
-                Serial.readBytes(readbuff, blen);                
-                Serial.write(appendBufferToFifo((fifo_t *)&TERMINAL_FIFOS[id].fifo_o,(char *) readbuff, blen));
-              }else{
-                Serial.write(0); //error
+              if (blen <= sizeof(readbuff)){
+                if (id != -1 && blen <= (FIFO_SIZE - TERMINAL_FIFOS[id].fifo_o.fifohead + TERMINAL_FIFOS[id].fifo_o.fifotail) % FIFO_SIZE){ 
+                  Serial.write(0x01); //continue
+                  Serial.readBytes(readbuff, blen);                
+                  Serial.write(appendBufferToFifo((fifo_t *)&TERMINAL_FIFOS[id].fifo_o,(char *) readbuff, blen));
+                }else{
+                  Serial.write(0); //error
+                }
               }
             break;
 
           case 'r': //recv (pc recv from terminal)
             while (!Serial.available());
             id = get_idx_from_termid(Serial.read());
-            readBufferFromFifo((fifo_t *)&TERMINAL_FIFOS[id].fifo_i,(char *) readbuff, &blen);
-            Serial.write(blen); //length
-            Serial.write(readbuff,blen); //length
+            readBufferFromFifo((fifo_t *)&TERMINAL_FIFOS[id].fifo_i,(char *) readbuff, (TERMINAL_FIFOS[i].fifo_i.fifotail - TERMINAL_FIFOS[i].fifo_i.fifohead + FIFO_SIZE) % FIFO_SIZE);
+            Serial.write(readbuff, (TERMINAL_FIFOS[i].fifo_i.fifotail - TERMINAL_FIFOS[i].fifo_i.fifohead + FIFO_SIZE) % FIFO_SIZE); //length
             break;
 
           case 'p': //poll
-            Serial.write(TERMINAL_COUNT);
-            for(i=0;i<TERMINAL_COUNT;i++){
+            Serial.write(MAX_TERMINALS);
+            for(i=0;i<MAX_TERMINALS;i++){
               Serial.write(TERMINAL_FIFOS[i].inuse);
               Serial.write(TERMINAL_FIFOS[i].termid);
               Serial.write((FIFO_SIZE - TERMINAL_FIFOS[i].fifo_o.fifohead + TERMINAL_FIFOS[i].fifo_o.fifotail) % FIFO_SIZE); //remaining
-              Serial.write((TERMINAL_FIFOS[i].fifo_i.fifotail - TERMINAL_FIFOS[i].fifo_i.fifohead + FIFO_SIZE) % FIFO_SIZE); //abailable
+              Serial.write((TERMINAL_FIFOS[i].fifo_i.fifotail - TERMINAL_FIFOS[i].fifo_i.fifohead + FIFO_SIZE) % FIFO_SIZE); //available
             }
             break;
 //----------------------------------------------------
@@ -365,6 +377,19 @@ void readBufferFromFifo(fifo_t *fifo, uint8_t *buffer, uint8_t * length) {
     }
   }
 }
+
+void term_init(){
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV128); //slow things down if needed
+  SPI.setBitOrder(LSBFIRST);
+  SPI.setDataMode(SPI_MODE2);
+  pinMode(BSYNC_PIN,OUTPUT);
+  pinMode(BDIR_PIN, INPUT_PULLUP);
+
+  sync_bitcounter();
+  term_bsync();
+}
+
 
 inline void term_beep(uint8_t terminal_id){
 uint8_t arg = BEEP_CHARACTER;
